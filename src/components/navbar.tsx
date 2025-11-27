@@ -29,10 +29,10 @@ export default function Navbar() {
 
           {/* Buka Toko Button - Solid */}
           <Link
-            href="/register"
+            href="/buka-toko"
             className="px-4 sm:px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl transition-all duration-300 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-600/40 hover:shadow-orange-600/60 hover:scale-105 active:scale-95"
           >
-            Register
+            Buka Toko
           </Link>
         </div>
       </div>

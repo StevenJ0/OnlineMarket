@@ -43,7 +43,7 @@ export default function LoginPage() {
       console.log("Login sukses:", result)
       alert("Login Berhasil! Mengalihkan ke halaman utama...")
       
-      router.push("/dashboard") 
+      router.push("/") 
 
     } catch (error: any) {
       console.error("Login Error:", error)
