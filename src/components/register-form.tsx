@@ -11,6 +11,7 @@ export default function RegisterForm() {
   const [registerData, setRegisterData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     agreeTerms: false,
@@ -24,10 +25,62 @@ export default function RegisterForm() {
     }))
   }
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Register attempt:", registerData)
-  }
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (registerData.password !== registerData.confirmPassword) {
+      alert("Password dan konfirmasi tidak sama!");
+      return;
+    }
+
+    if (!registerData.agreeTerms) {
+      alert("Anda harus menyetujui Syarat dan Ketentuan.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registerData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        switch (response.status) {
+          case 400:
+            alert(result.error || "Data tidak lengkap.");
+            break;
+
+          case 401:
+            alert(result.error || "Password tidak valid.");
+            break;
+
+          case 409:
+            alert("Email sudah terdaftar.");
+            break;
+
+          case 500:
+            alert("Terjadi kesalahan server.");
+            break;
+
+          default:
+            alert("Terjadi kesalahan.");
+        }
+        return;
+      }
+
+      alert("Registrasi berhasil!");
+      console.log("Registration success:", result);
+
+    } catch (error) {
+      console.error("Register fetch error:", error);
+      alert("Tidak dapat terhubung ke server.");
+    }
+  };
+
+  
 
   return (
     <div className="w-full">
@@ -60,6 +113,19 @@ export default function RegisterForm() {
             className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/50 transition"
           />
         </div>
+        <div>
+          <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">PHONE NUMBER</label>
+          <input
+            type="tel"
+            name="phone"
+            value={registerData.phone}
+            onChange={handleRegisterChange}
+            placeholder="08123456789"
+            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/50 transition"
+          />
+        </div>
+
+
 
         {/* Password Field */}
         <div>

@@ -29,7 +29,7 @@ export default function LoginPage() {
         <div className="flex items-center gap-4">
           <button className="text-slate-300 hover:text-white transition">Login</button>
           <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full font-semibold transition">
-            Buka Toko
+            Selamat 
           </button>
         </div>
       </nav>
@@ -41,7 +41,7 @@ export default function LoginPage() {
           <div className="w-1/2 bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 p-12 flex flex-col items-center justify-center">
             <div className="w-full">
               <h2 className="text-2xl font-bold text-white mb-1">Selamat Datang</h2>
-              <p className="text-slate-400 text-sm mb-8">Masuk ke Toko Anda</p>
+              <p className="text-slate-400 text-sm mb-8">Masuk ke Akun Anda</p>
               <SecurityIllustration />
             </div>
           </div>
