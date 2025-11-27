@@ -6,3 +6,14 @@ export async function addData(table: string, data: any) {
     console.log("Insert result:", result, "Insert error:", error);
     return { data: result, error };
 }
+
+// nambahin service biar bisa baca cek email untuk login yoo
+export async function getDataByColumn(table: string, column: string, value: string) {
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .eq(column, value)
+    .single();
+    
+  return { data, error };
+}
