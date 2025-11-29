@@ -8,8 +8,6 @@ export default function BukaTokoPage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // Di real project: kirim data ke backend dulu
-    // Sekarang: langsung pindah ke halaman verifikasi
     router.push("/verifikasi-email");
   }
 

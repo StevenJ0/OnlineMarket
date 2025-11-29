@@ -4,8 +4,10 @@ import type React from "react"
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function RegisterForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [registerData, setRegisterData] = useState({
@@ -73,6 +75,7 @@ export default function RegisterForm() {
 
       alert("Registrasi berhasil!");
       console.log("Registration success:", result);
+      router.push("/login");
 
     } catch (error) {
       console.error("Register fetch error:", error);
@@ -80,15 +83,12 @@ export default function RegisterForm() {
     }
   };
 
-  
-
   return (
     <div className="w-full">
       <h1 className="text-3xl font-bold text-white mb-2">Buat Akun Baru</h1>
       <p className="text-blue-100 text-sm mb-8">Bergabunglah dengan MyStore untuk mulai berjualan atau berbelanja</p>
 
       <form onSubmit={handleRegisterSubmit} className="space-y-5">
-        {/* Name Field */}
         <div>
           <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">NAMA LENGKAP</label>
           <input
@@ -101,7 +101,6 @@ export default function RegisterForm() {
           />
         </div>
 
-        {/* Email Field */}
         <div>
           <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">EMAIL ADDRESS</label>
           <input
@@ -125,9 +124,6 @@ export default function RegisterForm() {
           />
         </div>
 
-
-
-        {/* Password Field */}
         <div>
           <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">KATA SANDI</label>
           <div className="relative">
@@ -149,7 +145,6 @@ export default function RegisterForm() {
           </div>
         </div>
 
-        {/* Confirm Password Field */}
         <div>
           <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">KONFIRMASI KATA SANDI</label>
           <div className="relative">
@@ -171,7 +166,6 @@ export default function RegisterForm() {
           </div>
         </div>
 
-        {/* Terms & Conditions */}
         <label className="flex items-start gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -188,7 +182,6 @@ export default function RegisterForm() {
           </span>
         </label>
 
-        {/* Register Button */}
         <button
           type="submit"
           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition duration-200 text-center tracking-wide mt-8"
@@ -196,7 +189,6 @@ export default function RegisterForm() {
           DAFTAR SEKARANG
         </button>
 
-        {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-white/20"></div>
@@ -206,7 +198,6 @@ export default function RegisterForm() {
           </div>
         </div>
 
-        {/* Sign In Link */}
         <div className="text-center">
           <p className="text-sm text-white/80">
             Sudah punya akun?{" "}
