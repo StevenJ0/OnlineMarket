@@ -15,22 +15,17 @@ export default function FilterSidebar({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Ambil state awal dari URL
   const currentCategory = searchParams.get("category") || "";
   const currentLocation = searchParams.get("location") || "";
 
   const handleFilterChange = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    // Jika nilai sama diklik lagi, hapus filter (toggle off)
     if (params.get(key) === value) {
       params.delete(key);
     } else {
       params.set(key, value);
     }
-
-    // Reset page ke 1 jika filter berubah (opsional)
-    // params.delete('page');
 
     router.push(`/search?${params.toString()}`);
   };

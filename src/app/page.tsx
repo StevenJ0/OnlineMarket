@@ -11,10 +11,9 @@ import {
   MapPin,
 } from "lucide-react";
 
-// --- Tipe Data (Sesuai Skema Database) ---
 interface ProductImage {
   image_url: string;
-  is_primary: boolean; // Tambahkan ini
+  is_primary: boolean;
 }
 
 interface ProductReview {
@@ -23,8 +22,6 @@ interface ProductReview {
 
 interface Seller {
   store_name: string;
-  // Jika ingin mengambil kota, perlu join ke addresses -> cities
-  // Untuk performa home page, store_name sudah cukup dulu
 }
 
 interface Product {
@@ -41,7 +38,6 @@ interface Product {
   product_reviews: ProductReview[];
 }
 
-// --- Helper: Format Rupiah ---
 const formatRupiah = (price: number) => {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -57,14 +53,12 @@ const calculateRating = (reviews: ProductReview[]) => {
   const total = reviews.reduce((acc, curr) => acc + curr.rating, 0);
   const avg = total / reviews.length;
 
-  // Return rata-rata (1 desimal) dan jumlah ulasan
   return {
     avg: parseFloat(avg.toFixed(1)),
     count: reviews.length,
   };
 };
 
-// --- Helper: Fetch Data (Server Side) ---
 async function getFeaturedProducts() {
   const { data, error } = await supabase
     .from("products")
@@ -100,7 +94,6 @@ async function getCategories() {
   return data || [];
 }
 
-// --- Main Component ---
 export default async function Home() {
   const products = await getFeaturedProducts();
   const categories = await getCategories();
@@ -197,7 +190,6 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map((product) => {
-              // LOGIKA BARU: Cari gambar primary, jika tidak ada ambil yang pertama
               const primaryImage =
                 product.product_images.find((img) => img.is_primary) ||
                 product.product_images[0];
@@ -205,7 +197,6 @@ export default async function Home() {
                 primaryImage?.image_url ||
                 "https://via.placeholder.com/400x300?text=No+Image";
 
-              // LOGIKA BARU: Hitung rating
               const { avg: ratingAvg, count: reviewCount } = calculateRating(
                 product.product_reviews
               );
@@ -283,7 +274,7 @@ export default async function Home() {
         )}
       </section>
 
-      {/* --- CTA BANNER (Optional) --- */}
+      {/* --- CTA BANNER --- */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto bg-gradient-to-r from-orange-600 to-red-600 rounded-3xl p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="relative z-10 text-center md:text-left">

@@ -18,7 +18,6 @@ export default function SearchBar({
     if (!query.trim()) return;
 
     setIsLoading(true);
-    // Redirect ke halaman search dengan query param ?q=...
     router.push(`/search?q=${encodeURIComponent(query)}`);
     setIsLoading(false);
   };

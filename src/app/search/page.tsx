@@ -1,12 +1,10 @@
 import Navbar from "@/components/navbar";
 import SearchBar from "@/components/SearchBar";
-import FilterSidebar from "@/components/FilterSidebar"; // Import komponen baru
+import FilterSidebar from "@/components/FilterSidebar";
 import { supabase } from "@/lib/supabase/supabaseClient";
 import Link from "next/link";
 import { Star, Store, MapPin, ShoppingBag, FilterX } from "lucide-react";
 
-// --- Tipe Data ---
-// (Kita gunakan tipe data yang mirip dengan Home, tapi perlu detail Lokasi untuk SRS)
 interface Product {
   id: string;
   name: string;
@@ -15,15 +13,13 @@ interface Product {
   categories: { name: string } | null;
   sellers: {
     store_name: string;
-    kota?: string; // Tambahkan ini
-    provinsi?: string; // Tambahkan ini
-    // Hapus bagian addresses: { ... } yang lama
+    kota?: string;
+    provinsi?: string;
   } | null;
   product_images: { image_url: string; is_primary: boolean }[];
   product_reviews: { rating: number }[];
 }
 
-// --- Helper Rupiah ---
 const formatRupiah = (price: number) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -31,7 +27,6 @@ const formatRupiah = (price: number) =>
     minimumFractionDigits: 0,
   }).format(price);
 
-// --- Helper Rating ---
 const calculateRating = (reviews: any[]) => {
   if (!reviews || reviews.length === 0) return { avg: 0, count: 0 };
   const total = reviews.reduce((acc, curr) => acc + curr.rating, 0);
@@ -42,21 +37,16 @@ const calculateRating = (reviews: any[]) => {
 };
 
 async function getFilterOptions() {
-  // 1. Ambil Semua Kategori
   const { data: categories } = await supabase
     .from("categories")
     .select("id, name")
     .order("name");
 
-  // 2. Ambil Lokasi Unik dari Seller yang Aktif
-  // Karena supabase-js belum punya .distinct() yang mudah untuk join, kita ambil semua kota seller lalu filter di JS
-  // (Untuk skala besar ini harus pakai RPC, tapi untuk tugas ini aman)
   const { data: sellers } = await supabase
     .from("sellers")
     .select("kota")
     .not("kota", "is", null);
 
-  // Filter unik kota menggunakan Set
   const uniqueLocations = Array.from(
     new Set(sellers?.map((s) => s.kota).filter(Boolean) as string[])
   ).sort();
@@ -77,16 +67,11 @@ export default async function SearchPage({
   const categoryFilter = params.category;
   const locationFilter = params.location;
 
-  // Ambil data untuk Sidebar
   const filterOptions = await getFilterOptions();
 
-  // ============================================
-  // 1. LOGIKA TEXT SEARCH (Hanya Nama, Deskripsi, Nama Toko)
-  // ============================================
   let sellerIdsFromSearch: string[] = [];
 
   if (query) {
-    // Cari ID Toko yang namanya mirip query
     const { data: foundSellers } = await supabase
       .from("sellers")
       .select("id")
@@ -95,9 +80,6 @@ export default async function SearchPage({
     sellerIdsFromSearch = foundSellers?.map((s) => s.id) || [];
   }
 
-  // ============================================
-  // 2. QUERY UTAMA (Produk)
-  // ============================================
   let dbQuery = supabase
     .from("products")
     .select(
@@ -113,27 +95,22 @@ export default async function SearchPage({
       product_reviews (rating)
     `
     )
-    .eq("status", "active"); // Uncomment jika data sudah rapi
+    .eq("status", "active");
 
-  // A. Terapkan Filter Kategori (Dari Sidebar)
   if (categoryFilter) {
-    // Menggunakan !inner join pada select di atas memungkinkan filtering relasi
     dbQuery = dbQuery.eq("categories.name", categoryFilter);
   }
 
-  // B. Terapkan Filter Lokasi (Dari Sidebar)
   if (locationFilter) {
     dbQuery = dbQuery.eq("sellers.kota", locationFilter);
   }
 
-  // C. Terapkan Text Search (Dari Search Bar)
   if (query) {
     const orConditions = [
-      `name.ilike.%${query}%`, // Cocok Nama Produk
-      `description.ilike.%${query}%`, // Cocok Deskripsi
+      `name.ilike.%${query}%`,
+      `description.ilike.%${query}%`,
     ];
 
-    // Jika ada toko yang namanya cocok dengan text search
     if (sellerIdsFromSearch.length > 0) {
       orConditions.push(`seller_id.in.(${sellerIdsFromSearch.join(",")})`);
     }
@@ -211,7 +188,6 @@ export default async function SearchPage({
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => {
-                  // --- LOGIKA TAMPILAN (Copy dari sebelumnya) ---
                   const primaryImage =
                     product.product_images.find((img: any) => img.is_primary) ||
                     product.product_images[0];
@@ -220,7 +196,7 @@ export default async function SearchPage({
                     "https://via.placeholder.com/400x300?text=No+Image";
                   const { avg, count } = calculateRating(
                     product.product_reviews
-                  ); // Pastikan fungsi ini ada di file Anda
+                  );
 
                   const sellerData = product.sellers as any;
                   const cityName =
