@@ -1,8 +1,9 @@
 import Navbar from "@/components/navbar";
 import SearchBar from "@/components/SearchBar";
+import FilterSidebar from "@/components/FilterSidebar"; // Import komponen baru
 import { supabase } from "@/lib/supabase/supabaseClient";
 import Link from "next/link";
-import { Star, Store, MapPin, Filter, ShoppingBag } from "lucide-react";
+import { Star, Store, MapPin, ShoppingBag, FilterX } from "lucide-react";
 
 // --- Tipe Data ---
 // (Kita gunakan tipe data yang mirip dengan Home, tapi perlu detail Lokasi untuk SRS)
@@ -40,49 +41,108 @@ const calculateRating = (reviews: any[]) => {
   };
 };
 
+async function getFilterOptions() {
+  // 1. Ambil Semua Kategori
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name")
+    .order("name");
+
+  // 2. Ambil Lokasi Unik dari Seller yang Aktif
+  // Karena supabase-js belum punya .distinct() yang mudah untuk join, kita ambil semua kota seller lalu filter di JS
+  // (Untuk skala besar ini harus pakai RPC, tapi untuk tugas ini aman)
+  const { data: sellers } = await supabase
+    .from("sellers")
+    .select("kota")
+    .not("kota", "is", null);
+
+  // Filter unik kota menggunakan Set
+  const uniqueLocations = Array.from(
+    new Set(sellers?.map((s) => s.kota).filter(Boolean) as string[])
+  ).sort();
+
+  return {
+    categories: categories || [],
+    locations: uniqueLocations,
+  };
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; location?: string }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
+  const categoryFilter = params.category;
+  const locationFilter = params.location;
 
-  console.log("🔍 Mencari keyword:", query); // Debug 1: Cek keyword masuk
+  // Ambil data untuk Sidebar
+  const filterOptions = await getFilterOptions();
 
-  // --- QUERY DATABASE ---
-  let dbQuery = supabase.from("products").select(`
+  // ============================================
+  // 1. LOGIKA TEXT SEARCH (Hanya Nama, Deskripsi, Nama Toko)
+  // ============================================
+  let sellerIdsFromSearch: string[] = [];
+
+  if (query) {
+    // Cari ID Toko yang namanya mirip query
+    const { data: foundSellers } = await supabase
+      .from("sellers")
+      .select("id")
+      .ilike("store_name", `%${query}%`);
+
+    sellerIdsFromSearch = foundSellers?.map((s) => s.id) || [];
+  }
+
+  // ============================================
+  // 2. QUERY UTAMA (Produk)
+  // ============================================
+  let dbQuery = supabase
+    .from("products")
+    .select(
+      `
       id, name, price, description, status,
-      categories (name),
-      sellers (
+      categories!inner (name), 
+      sellers!inner (
         store_name,
         kota,      
         provinsi
       ),
       product_images (image_url, is_primary),
       product_reviews (rating)
-    `);
-  // .eq("status", "active") <--- SAYA KOMENTARI DULU UNTUK TEST
+    `
+    )
+    .eq("status", "active"); // Uncomment jika data sudah rapi
 
+  // A. Terapkan Filter Kategori (Dari Sidebar)
+  if (categoryFilter) {
+    // Menggunakan !inner join pada select di atas memungkinkan filtering relasi
+    dbQuery = dbQuery.eq("categories.name", categoryFilter);
+  }
+
+  // B. Terapkan Filter Lokasi (Dari Sidebar)
+  if (locationFilter) {
+    dbQuery = dbQuery.eq("sellers.kota", locationFilter);
+  }
+
+  // C. Terapkan Text Search (Dari Search Bar)
   if (query) {
-    // Menggunakan raw string agar lebih aman terhadap karakter spesial
-    // Pastikan mencari ke deskripsi hanya jika deskripsi tidak null (otomatis dihandle ilike biasanya)
-    dbQuery = dbQuery.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+    const orConditions = [
+      `name.ilike.%${query}%`, // Cocok Nama Produk
+      `description.ilike.%${query}%`, // Cocok Deskripsi
+    ];
+
+    // Jika ada toko yang namanya cocok dengan text search
+    if (sellerIdsFromSearch.length > 0) {
+      orConditions.push(`seller_id.in.(${sellerIdsFromSearch.join(",")})`);
+    }
+
+    dbQuery = dbQuery.or(orConditions.join(","));
   }
 
   const { data, error } = await dbQuery;
-
-  // Debug 2: Cek apa yang dikembalikan Supabase
-  if (error) {
-    console.error("❌ Supabase Error:", error.message);
-  } else {
-    console.log(`✅ Ditemukan ${data?.length} produk.`);
-    if (data && data.length > 0) {
-      console.log("Sample status produk pertama:", (data[0] as any).status);
-    }
-  }
-
-  const products = (data as unknown as Product[]) || [];
+  const products = (data as any[]) || [];
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200">
@@ -97,10 +157,24 @@ export default async function SearchPage({
             <SearchBar defaultValue={query} />
           </div>
 
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-white">
-              {query ? `Hasil pencarian untuk "${query}"` : "Semua Produk"}
-            </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-semibold text-white">
+                {query ? `Hasil pencarian "${query}"` : "Semua Produk"}
+              </h1>
+              <div className="flex gap-2 text-sm text-slate-400 mt-1">
+                {categoryFilter && (
+                  <span className="bg-slate-800 px-2 py-0.5 rounded text-orange-400">
+                    Kategori: {categoryFilter}
+                  </span>
+                )}
+                {locationFilter && (
+                  <span className="bg-slate-800 px-2 py-0.5 rounded text-blue-400">
+                    Lokasi: {locationFilter}
+                  </span>
+                )}
+              </div>
+            </div>
             <span className="text-slate-400 text-sm">
               Ditemukan <strong>{products.length}</strong> produk
             </span>
@@ -108,93 +182,46 @@ export default async function SearchPage({
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* --- SIDEBAR FILTER (UI Only untuk SRS) --- */}
-          {/* Implementasi filter lokasi fungsional butuh State Management Client Side */}
-          <aside className="w-full lg:w-64 flex-shrink-0 space-y-6 hidden lg:block">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4 text-white font-bold">
-                <Filter size={18} /> Filter
-              </div>
-
-              {/* Filter Lokasi (Mockup untuk SRS) */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-                  Lokasi
-                </h3>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded bg-slate-800 border-slate-700"
-                    />{" "}
-                    Jabodetabek
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded bg-slate-800 border-slate-700"
-                    />{" "}
-                    Jawa Tengah
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded bg-slate-800 border-slate-700"
-                    />{" "}
-                    Luar Jawa
-                  </label>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-800 my-4"></div>
-
-              {/* Filter Harga */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-                  Harga
-                </h3>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Min"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Max"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
-                  />
-                </div>
-              </div>
-            </div>
-          </aside>
+          {/* --- SIDEBAR FILTER (COMPONENT BARU) --- */}
+          <FilterSidebar
+            categories={filterOptions.categories}
+            locations={filterOptions.locations}
+          />
 
           {/* --- GRID PRODUK --- */}
           <div className="flex-1">
             {products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-slate-900/30 rounded-3xl border border-slate-800 border-dashed">
-                <ShoppingBag size={64} className="text-slate-700 mb-4" />
+              <div className="flex flex-col items-center justify-center py-20 bg-slate-900/30 rounded-3xl border border-slate-800 border-dashed h-full">
+                <FilterX size={64} className="text-slate-700 mb-4" />
                 <h3 className="text-xl font-bold text-slate-400">
-                  Produk tidak ditemukan
+                  Tidak ditemukan
                 </h3>
-                <p className="text-slate-500">
-                  Coba kata kunci lain atau kurangi filter.
+                <p className="text-slate-500 text-center max-w-md mt-2">
+                  Coba reset filter atau gunakan kata kunci lain.
                 </p>
+                {(categoryFilter || locationFilter) && (
+                  <Link
+                    href={`/search?q=${query}`}
+                    className="mt-6 text-orange-500 hover:text-orange-400 font-semibold text-sm"
+                  >
+                    Hapus Semua Filter
+                  </Link>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => {
+                  // --- LOGIKA TAMPILAN (Copy dari sebelumnya) ---
                   const primaryImage =
-                    product.product_images.find((img) => img.is_primary) ||
+                    product.product_images.find((img: any) => img.is_primary) ||
                     product.product_images[0];
                   const imageUrl =
                     primaryImage?.image_url ||
                     "https://via.placeholder.com/400x300?text=No+Image";
                   const { avg, count } = calculateRating(
                     product.product_reviews
-                  );
+                  ); // Pastikan fungsi ini ada di file Anda
 
-                  // Ambil Lokasi Toko
                   const sellerData = product.sellers as any;
                   const cityName =
                     sellerData?.kota || sellerData?.provinsi || "Indonesia";
@@ -247,7 +274,6 @@ export default async function SearchPage({
                                 }
                               />
                               <span>{avg > 0 ? avg : "Baru"}</span>
-                              {count > 0 && <span>({count})</span>}
                             </div>
                           </div>
                         </div>
