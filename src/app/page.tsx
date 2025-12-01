@@ -1,5 +1,5 @@
 import Navbar from "@/components/navbar";
-import { supabase } from "@/lib/supabase/supabaseClient";
+import { supabase } from "@/lib/supabase/init";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import {
