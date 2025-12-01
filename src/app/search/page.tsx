@@ -1,7 +1,7 @@
 import Navbar from "@/components/navbar";
 import SearchBar from "@/components/SearchBar";
 import FilterSidebar from "@/components/FilterSidebar";
-import { supabase } from "@/lib/supabase/supabaseClient";
+import { supabase } from "@/lib/supabase/init";
 import Link from "next/link";
 import { Star, Store, MapPin, ShoppingBag, FilterX } from "lucide-react";
 
