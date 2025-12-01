@@ -13,7 +13,7 @@ export default function Navbar() {
             <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
           <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent hidden sm:inline">
-            MyStore
+            Tokopaedi
           </span>
         </Link>
 
