@@ -1,6 +1,7 @@
 import Navbar from "@/components/navbar";
 import { supabase } from "@/lib/supabase/supabaseClient";
 import Link from "next/link";
+import SearchBar from "@/components/SearchBar";
 import {
   ShoppingBag,
   ArrowRight,
@@ -137,19 +138,8 @@ export default async function Home() {
           </p>
 
           {/* Search Bar Besar */}
-          <div className="max-w-2xl mx-auto relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500" />
-            <div className="relative flex items-center bg-slate-900 border border-slate-700/50 rounded-2xl p-2 shadow-2xl">
-              <Search className="ml-4 text-slate-500" size={24} />
-              <input
-                type="text"
-                placeholder="Cari sepatu, gadget, atau fashion..."
-                className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-slate-500 px-4 py-3 text-lg"
-              />
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-orange-500/20">
-                Cari
-              </button>
-            </div>
+          <div className="mb-10">
+            <SearchBar />
           </div>
         </div>
       </section>
