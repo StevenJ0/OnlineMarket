@@ -1,8 +1,75 @@
-import { ProductController } from '@/controllers/ProductController';
-import Navbar from '@/components/navbar'; 
+import Navbar from '@/components/navbar';
 import ProductGallery from '@/components/views/ProductGallery';
 import Link from 'next/link';
-import { MapPin, ShoppingCart, Star, Store, ArrowLeft, Share2, Shield, Truck, RotateCcw } from 'lucide-react';
+import { supabase } from '@/lib/supabase/init';
+import { MapPin, ShoppingCart, Star, Store, ArrowLeft, Share2 } from 'lucide-react';
+
+async function getProductData(id: string) {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        id, name, description, price, stock,
+        category:categories(name),
+        seller:sellers(
+          store_name,
+          kota,
+          provinsi
+        ),
+        images:product_images(image_url),
+        reviews:product_reviews(rating)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const rawSeller: any = data.seller;
+    const rawCategory: any = data.category;
+
+    const sellerData = Array.isArray(rawSeller) ? rawSeller[0] : rawSeller;
+    const categoryData = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory;
+
+    const formattedPrice = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(data.price);
+
+    const storeLocation = sellerData?.kota
+      ? `${sellerData.kota}, ${sellerData.provinsi}`
+      : "Lokasi Tidak Diketahui";
+
+    const storeName = sellerData?.store_name || 'Toko Tanpa Nama';
+    const categoryName = categoryData?.name || 'Umum';
+
+    const reviews = data.reviews || [];
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews > 0
+      ? reviews.reduce((sum: number, rev: any) => sum + rev.rating, 0) / totalReviews
+      : 0;
+
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      price: formattedPrice,
+      rawPrice: data.price,
+      categoryName: categoryName,
+      storeName: storeName,
+      storeLocation: storeLocation,
+      images: data.images || [],
+      rating: averageRating.toFixed(1),
+      totalReviews: totalReviews
+    };
+  } catch (err) {
+    console.error("System Error:", err);
+    return null;
+  }
+}
 
 type Props = {
   params: Promise<{ id: string }>
@@ -12,8 +79,7 @@ export default async function ProductDetailPage(props: Props) {
   const params = await props.params;
   const id = params.id;
   
-  const controller = new ProductController();
-  const product = await controller.show(id);
+  const product = await getProductData(id);
 
   if (!product) {
     return (
@@ -102,16 +168,9 @@ export default async function ProductDetailPage(props: Props) {
                   <div className="flex flex-col gap-1">
                     <h3 className="font-bold text-white truncate text-base">{product.storeName}</h3>
                     
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                      
-                      <span className="self-start sm:self-auto flex-shrink-0 px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-bold border border-green-500/20 uppercase tracking-wide">
-                        Mall
-                      </span>
-                      
-                      <div className="flex items-center text-xs text-slate-400 min-w-0">
-                        <MapPin size={12} className="mr-1.5 text-orange-500 flex-shrink-0" />
-                        <span className="truncate">{product.storeLocation}</span>
-                      </div>
+                    <div className="flex items-center text-xs text-slate-400 min-w-0">
+                      <MapPin size={12} className="mr-1.5 text-orange-500 flex-shrink-0" />
+                      <span className="truncate">{product.storeLocation}</span>
                     </div>
                   </div>
                 </div>
@@ -126,7 +185,7 @@ export default async function ProductDetailPage(props: Props) {
               <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
                 Deskripsi Produk
               </h3>
-              <div className="text-slate-400 text-sm leading-relaxed bg-slate-900/30 p-4 rounded-xl border border border-slate-800/50">
+              <div className="text-slate-400 text-sm leading-relaxed bg-slate-900/30 p-4 rounded-xl border border-slate-800/50">
                 <p className="whitespace-pre-line">
                   {product.description || "Tidak ada deskripsi tersedia untuk produk ini."}
                 </p>
@@ -147,7 +206,6 @@ export default async function ProductDetailPage(props: Props) {
             </div>
             
             <div className="grid grid-cols-2 md:flex md:flex-1 md:justify-end gap-3 w-full md:w-auto">
-              
               <button className="h-12 flex items-center justify-center gap-2 rounded-xl border-2 border-slate-700 bg-slate-900/50 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-500 transition-all active:scale-95 md:w-auto md:px-6">
                 <ShoppingCart size={18} />
                 <span className="font-semibold text-sm">Keranjang</span>
@@ -157,7 +215,6 @@ export default async function ProductDetailPage(props: Props) {
                 <span className="text-sm sm:text-base">Beli Sekarang</span>
               </button>
             </div>
-
           </div>
         </div>
       </div>
