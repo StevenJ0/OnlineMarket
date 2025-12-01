@@ -1,33 +1,42 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export default function Navbar() {
-  return (
-    <nav className="w-full sticky top-0 z-50 border-b border-slate-800/30 backdrop-blur-xl bg-gradient-to-b from-slate-950/95 to-slate-950/80 shadow-lg shadow-slate-950/20">
-      <div className="flex items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        {/* Logo Section */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-600/30 group-hover:shadow-orange-600/50 transition-all duration-300">
-            <span className="text-white font-black text-lg">B</span>
-            <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </div>
-          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent hidden sm:inline">
-            MyStore
-          </span>
-        </Link>
 
-        {/* Buttons */}
-        <div className="flex gap-2 sm:gap-3 items-center">
-          {/* Login Button - Outline */}
-          <Link
-            href="/login"
-            className="px-4 sm:px-6 py-2.5 text-sm font-semibold border border-slate-600/60 text-slate-200 rounded-xl transition-all duration-300 hover:border-orange-500/80 hover:text-orange-400 hover:bg-orange-500/5 active:scale-95 backdrop-blur-sm"
-          >
-            Login
+  const [isLogin, setIsLogin] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [openMenu, setOpenMenu] = useState(false);
+
+  useEffect(() => {
+    async function fetchSession() {
+      const res = await fetch("/api/auth/session" , {
+        method: "GET",
+        credentials: "include"
+      });
+      console.log(res)
+      const data = await res.json();
+      setIsLogin(data.loggedIn);
+      setUser(data.user);
+    }
+
+    fetchSession();
+  }, []);
+
+  console.log(user)
+
+  return (
+    <nav className="w-full sticky top-0 z-50 border-b backdrop-blur-xl bg-slate-950/80">
+      <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
+
+        {/* LEFT: Logo */}
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="text-xl font-bold text-white">MyStore</span>
           </Link>
 
-          {/* Buka Toko Button - Solid */}
+          {/* Products Menu */}
           <Link
             href="/buka-toko"
             className="px-4 sm:px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl transition-all duration-300 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-600/40 hover:shadow-orange-600/60 hover:scale-105 active:scale-95"
@@ -35,6 +44,46 @@ export default function Navbar() {
             Buka Toko
           </Link>
         </div>
+
+        {/* MIDDLE: Search bar */}
+        <div className="flex-1 px-10 hidden md:block">
+          <div className="w-full max-w-xl mx-auto relative">
+            <input
+              type="text"
+              placeholder="Cari Produk"
+              className="w-full px-5 py-2.5 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 focus:ring-2 focus:ring-orange-500 outline-none"
+            />
+          </div>
+        </div>
+
+        {/* RIGHT: Auth Buttons / User Menu */}
+        {!isLogin ? (
+          <div className="flex gap-3">
+            <Link href="/login" className="px-5 py-2 border border-slate-600/60 text-slate-200 rounded-xl">
+              Login
+            </Link>
+            <Link href="/register" className="px-5 py-2 text-white bg-orange-600 rounded-xl">
+              Register
+            </Link>
+          </div>
+        ) : (
+          <div className="relative">
+            <button
+              onClick={() => setOpenMenu(prev => !prev)}
+              className="px-5 py-2.5 bg-slate-800 text-white rounded-xl"
+            >
+              {user?.name || "Profile"}
+            </button>
+
+            {openMenu && (
+              <div className="absolute right-0 mt-2 w-44 bg-slate-900 border border-slate-700 rounded-xl transition">
+                <Link href="/store" className="block px-4 py-2 hover:bg-slate-800">Toko Anda</Link>
+                <Link href="/profile" className="block px-4 py-2 hover:bg-slate-800">Profile</Link>
+                <Link href="/logout" className="block px-4 py-2 hover:bg-slate-800">Logout</Link>
+              </div>
+            )}
+          </div>
+            )}
       </div>
     </nav>
   )
