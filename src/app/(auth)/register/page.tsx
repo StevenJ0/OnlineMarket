@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import FormFillingIllustration from "@/components/register-illustration"
-import RegisterForm from "@/components/register-form"
+import FormFillingIllustration from "@/components/views/auth/register-illustration"
+import RegisterForm from "@/components/views/auth/register-form"
 
 export default function RegisterPage() {
   const [isVisible, setIsVisible] = useState(false)

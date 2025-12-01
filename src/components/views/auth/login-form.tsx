@@ -6,11 +6,14 @@ import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 
 export default function LoginForm() {
+  console.log("jalan")
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
   })
+
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -20,10 +23,36 @@ export default function LoginForm() {
     }))
   }
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Login attempt:", loginData)
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const payload = {
+      email: loginData.email,
+      password: loginData.password,
+      rememberMe,
+    };
+
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.error || "Login failed.");
+      return;
+    }
+
+    window.location.href = "/dashboard";
+
+  } catch (error) {
+    console.error("Login error:", error);
+    alert("Something went wrong. Please try again.");
   }
+};
 
   return (
     <div className="w-full">
@@ -72,6 +101,7 @@ export default function LoginForm() {
             <input
               type="checkbox"
               className="w-4 h-4 rounded bg-white/20 border border-white/30 cursor-pointer accent-orange-400"
+              onClick={() => setRememberMe(!rememberMe)}
             />
             <span className="text-sm text-white/80">Ingat saya</span>
           </label>
