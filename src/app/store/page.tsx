@@ -1,4 +1,4 @@
-import StoreView from "@/components/store-view";
+import StoreView from "@/components/views/store/store-view";
 
 const StorePage = () => {
   return <StoreView />;

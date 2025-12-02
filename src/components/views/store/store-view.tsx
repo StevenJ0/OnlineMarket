@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import RegisterStoreView from "./views/store/store-form";
-import DetailStoreView from "./views/store/detail-store";
+import RegisterStoreView from "./store-form";
+import DetailStoreView from "./detail-store";
 
 const StoreView = () => {
   const [user, setUser] = useState<any>(null);
