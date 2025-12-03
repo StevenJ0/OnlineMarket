@@ -1,0 +1,90 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+type MenuItem = {
+  name: string;
+  href: string;
+};
+
+const menu: MenuItem[] = [
+  { name: "Dashboard", href: "/penjual/dashboard" },
+  { name: "Kelola Produk", href: "/penjual/product" },
+  { name: "Laporan", href: "/penjual/report" },
+  { name: "View Rating", href: "/penjual/reting" },
+];
+
+export function Sidebar() {
+  const path = usePathname();
+
+  return (
+    <aside className="w-72 min-h-screen bg-[#050815] border-r border-slate-800/80 flex flex-col justify-between shadow-xl">
+      {/* TOP: Profil + Menu */}
+      <div>
+        {/* Header profile */}
+        <div className="px-6 py-5 border-b border-slate-800/80 bg-gradient-to-r from-[#060b1b] via-[#080d20] to-[#060b1b]">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-[#ff7a1a] flex items-center justify-center font-bold text-slate-900 shadow-[0_0_18px_rgba(255,122,26,0.55)]">
+              M
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-50">MyStore Admin</p>
+              <p className="text-xs text-slate-400">Dashboard Penjual</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Menu */}
+        <nav className="px-3 pt-4 pb-4 text-sm space-y-1">
+          <p className="px-3 mb-2 text-[11px] uppercase tracking-[0.12em] text-slate-500">
+            Menu Utama
+          </p>
+
+          {menu.map((m) => {
+            const active = path === m.href;
+
+            return (
+              <Link
+                key={m.name}
+                href={m.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition 
+                  ${
+                    active
+                      ? "bg-[#ff7a1a] text-black font-semibold shadow-[0_0_18px_rgba(255,122,26,0.35)]"
+                      : "text-slate-400 hover:text-slate-50 hover:bg-slate-800/60"
+                  }`}
+              >
+                <span
+                  className={`w-1.5 h-7 rounded-full ${
+                    active ? "bg-black/40" : "bg-slate-700/40"
+                  }`}
+                />
+                <span>{m.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* BOTTOM: Logout + copyright */}
+      <div className="px-4 pb-5 pt-3 border-t border-slate-800/80 bg-[#050815] space-y-3">
+        <button
+          type="button"
+          onClick={() => {
+            // TODO: isi dengan logika logout (supabase / next-auth / custom)
+          }}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200
+                     hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+        >
+          <span className="text-xs">⏻</span>
+          <span>Logout</span>
+        </button>
+
+        <p className="text-[11px] text-slate-500 text-center">
+          © 2025 MyStore
+        </p>
+      </div>
+    </aside>
+  );
+}
