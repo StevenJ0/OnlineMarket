@@ -1,90 +1,176 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Menu, X, Search, Store, User, LogOut, ShoppingBag } from "lucide-react";
 
 export default function Navbar() {
-
   const [isLogin, setIsLogin] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [openMenu, setOpenMenu] = useState(false);
+  const [openProfileMenu, setOpenProfileMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     async function fetchSession() {
-      const res = await fetch("/api/auth/session" , {
-        method: "GET",
-        credentials: "include"
-      });
-      console.log(res)
-      const data = await res.json();
-      setIsLogin(data.loggedIn);
-      setUser(data.user);
+      try {
+        const res = await fetch("/api/auth/session", {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await res.json();
+        setIsLogin(data.loggedIn);
+        setUser(data.user);
+      } catch (error) {
+        console.error("Gagal mengambil sesi:", error);
+      }
     }
-
     fetchSession();
   }, []);
 
-  console.log(user)
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <nav className="w-full sticky top-0 z-50 border-b backdrop-blur-xl bg-slate-950/80">
-      <div className="flex items-center justify-between px-6 py-3 max-w-7xl mx-auto">
-
-        {/* LEFT: Logo */}
+    <nav className="w-full sticky top-0 z-50 border-b border-slate-800 backdrop-blur-xl bg-slate-950/80">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="text-xl font-bold text-white">MyStore</span>
+          <Link href="/" className="flex items-center gap-2 group" onClick={closeMobileMenu}>
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-orange-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
+              <ShoppingBag size={18} />
+            </div>
+            <span className="text-xl font-bold text-white tracking-tight">Tokopaedi</span>
           </Link>
 
-          {/* Products Menu */}
-          <Link
-            href="/buka-toko"
-            className="px-4 sm:px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl transition-all duration-300 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-600/40 hover:shadow-orange-600/60 hover:scale-105 active:scale-95"
-          >
-            Buka Toko
-          </Link>
+          <div className="hidden md:block">
+            <Link href="/buka-toko" className="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+              Buka Toko
+            </Link>
+          </div>
         </div>
 
-        {/* MIDDLE: Search bar */}
-        <div className="flex-1 px-10 hidden md:block">
-          <div className="w-full max-w-xl mx-auto relative">
+        <div className="flex-1 px-8 hidden md:block">
+          <div className="w-full max-w-xl mx-auto relative group">
+            <div className="absolute left-3 top-2.5 text-slate-500 group-focus-within:text-orange-500 transition-colors">
+              <Search size={18} />
+            </div>
             <input
               type="text"
-              placeholder="Cari Produk"
-              className="w-full px-5 py-2.5 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 focus:ring-2 focus:ring-orange-500 outline-none"
+              placeholder="Cari Produk di Tokopaedi..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/50 text-slate-200 border border-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all text-sm"
             />
           </div>
         </div>
 
-        {/* RIGHT: Auth Buttons / User Menu */}
-        {!isLogin ? (
-          <div className="flex gap-3">
-            <Link href="/login" className="px-5 py-2 border border-slate-600/60 text-slate-200 rounded-xl">
-              Login
-            </Link>
-            <Link href="/register" className="px-5 py-2 text-white bg-orange-600 rounded-xl">
-              Register
-            </Link>
-          </div>
-        ) : (
-          <div className="relative">
-            <button
-              onClick={() => setOpenMenu(prev => !prev)}
-              className="px-5 py-2.5 bg-slate-800 text-white rounded-xl"
-            >
-              {user?.name || "Profile"}
-            </button>
+        <div className="hidden md:flex items-center gap-3">
+          {!isLogin ? (
+            <>
+              <Link href="/login" className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl hover:shadow-lg hover:shadow-orange-600/20 transition-all hover:scale-105 active:scale-95"
+              >
+                Daftar
+              </Link>
+            </>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setOpenProfileMenu((prev) => !prev)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-600 text-white rounded-xl transition-all"
+              >
+                <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+                  {user?.name?.charAt(0) || "U"}
+                </div>
+                <span className="text-sm font-medium max-w-[100px] truncate">{user?.name || "User"}</span>
+              </button>
 
-            {openMenu && (
-              <div className="absolute right-0 mt-2 w-44 bg-slate-900 border border-slate-700 rounded-xl transition">
-                <Link href="/store" className="block px-4 py-2 hover:bg-slate-800">Toko Anda</Link>
-                <Link href="/profile" className="block px-4 py-2 hover:bg-slate-800">Profile</Link>
-                <Link href="/logout" className="block px-4 py-2 hover:bg-slate-800">Logout</Link>
+              {openProfileMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <div className="px-4 py-3 border-b border-slate-800">
+                    <p className="text-sm text-white font-semibold truncate">{user?.name}</p>
+                    <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                  </div>
+                  <Link href="/store" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <Store size={16} /> Toko Saya
+                  </Link>
+                  <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <User size={16} /> Profile
+                  </Link>
+                  <div className="border-t border-slate-800 mt-1">
+                    <Link href="/logout" className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                      <LogOut size={16} /> Logout
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="md:hidden flex items-center">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-slate-950 border-b border-slate-800 animate-in slide-in-from-top-5 duration-200 absolute w-full left-0 top-full shadow-2xl">
+          <div className="p-4 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 text-slate-500" size={18} />
+              <input
+                type="text"
+                placeholder="Cari produk..."
+                className="w-full bg-slate-900 border border-slate-700 text-white rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-orange-500"
+              />
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <Link
+                href="/buka-toko"
+                onClick={closeMobileMenu}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-orange-600/10 to-orange-500/10 text-orange-400 font-semibold border border-orange-500/20"
+              >
+                <Store size={18} /> Buka Toko
+              </Link>
+            </div>
+
+            <hr className="border-slate-800" />
+
+            {!isLogin ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Link href="/login" onClick={closeMobileMenu} className="flex justify-center py-2.5 border border-slate-700 rounded-xl text-slate-300 font-medium">
+                  Masuk
+                </Link>
+                <Link href="/register" onClick={closeMobileMenu} className="flex justify-center py-2.5 bg-orange-600 rounded-xl text-white font-bold">
+                  Daftar
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="px-2 py-2 mb-2">
+                  <p className="text-sm font-semibold text-white">Halo, {user?.name}</p>
+                  <p className="text-xs text-slate-500">{user?.email}</p>
+                </div>
+                <Link href="/store" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
+                  <Store size={18} /> Toko Saya
+                </Link>
+                <Link href="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
+                  <User size={18} /> Profile Saya
+                </Link>
+                <Link href="/logout" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-900 rounded-xl">
+                  <LogOut size={18} /> Keluar
+                </Link>
               </div>
             )}
           </div>
-            )}
-      </div>
+        </div>
+      )}
     </nav>
-  )
+  );
 }
