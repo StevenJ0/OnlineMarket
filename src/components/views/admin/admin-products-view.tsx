@@ -17,7 +17,6 @@ const AdminProductsView = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- Helper: Format Rupiah ---
   const formatRupiah = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -27,7 +26,6 @@ const AdminProductsView = () => {
     }).format(price);
   };
 
-  // --- Helper: Hitung Rata-rata Rating ---
   const calculateRating = (reviews: any[]) => {
     if (!reviews || reviews.length === 0) return 0;
     const total = reviews.reduce((acc, curr) => acc + curr.rating, 0);
@@ -41,13 +39,11 @@ const AdminProductsView = () => {
       const json = await res.json();
 
       if (json.success) {
-        // PROSES DATA: Hitung rating dulu agar bisa disortir
         const processedData = json.data.map((item: any) => ({
           ...item,
           avgRating: calculateRating(item.product_reviews),
         }));
 
-        // SORTING: Berdasarkan Rating Tertinggi (Descending) sesuai SRS
         const sortedData = processedData.sort(
           (a: any, b: any) => b.avgRating - a.avgRating
         );
@@ -65,7 +61,6 @@ const AdminProductsView = () => {
     getProducts();
   }, []);
 
-  // --- Filter Search ---
   const filteredProducts = products.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -75,18 +70,15 @@ const AdminProductsView = () => {
       item.categories?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- SRS-MartPlace-11: Generate PDF Report ---
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
 
-    // Header
     doc.setFontSize(16);
     doc.text("LAPORAN DAFTAR PRODUK & RATING", 14, 20);
     doc.setFontSize(10);
     doc.text("Diurutkan berdasarkan Rating (Tertinggi ke Terendah)", 14, 26);
     doc.text(`Tanggal Cetak: ${new Date().toLocaleString("id-ID")}`, 14, 32);
 
-    // Definisi Kolom
     const tableColumn = [
       "No",
       "Nama Produk",
@@ -104,29 +96,27 @@ const AdminProductsView = () => {
         item.name,
         item.categories?.name || "-",
         item.sellers?.store_name || "-",
-        item.sellers?.provinces?.name || "-", // Lokasi Propinsi
+        item.sellers?.provinces?.name || "-",
         formatRupiah(item.price),
         item.avgRating > 0 ? `${item.avgRating} / 5` : "Belum ada rating",
       ];
       tableRows.push(rowData);
     });
 
-    // Generate Tabel
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 40,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [249, 115, 22] }, // Orange branding
+      headStyles: { fillColor: [249, 115, 22] },
       columnStyles: {
-        6: { fontStyle: "bold", halign: "center" }, // Kolom Rating bold & center
+        6: { fontStyle: "bold", halign: "center" },
       },
     });
 
     doc.save("Laporan_Produk_Rating.pdf");
   };
 
-  // Alias agar variable filteredStores di atas valid (karena copy paste logic PDF)
   const filteredStores = filteredProducts;
 
   return (

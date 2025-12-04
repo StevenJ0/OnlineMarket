@@ -113,7 +113,7 @@ const DashboardView = () => {
         </div>
       </div>
 
-      {/* --- MAIN ACTIONS (REQUEST ANDA) --- */}
+      {/* --- MAIN ACTIONS --- */}
       <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
         <Activity size={20} className="text-orange-500" />
         Aksi Cepat

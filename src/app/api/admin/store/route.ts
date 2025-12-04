@@ -6,27 +6,21 @@ import { updateData, RetrieveDataById } from "@/lib/supabase/service";
 import { sendActivationEmail } from "@/utils/generateActivationEmail";
 import { sendEmail } from "@/utils/sendEmail";
 
-// --- 1. SETUP VARIABEL ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey =
   process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// --- 2. VALIDASI VARIABEL (Agar tidak crash "supabaseKey is required") ---
 if (!supabaseUrl || !supabaseKey) {
   console.error(
     "❌ FATAL ERROR: Supabase URL atau Key tidak ditemukan di .env"
   );
-  // Kita tidak throw error di sini agar build tidak gagal total,
-  // tapi request API nanti akan kita handle.
 }
 
-// Inisialisasi Client hanya jika variabel ada
 const supabaseAdmin =
   supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 export const GET = withAuth(async () => {
   try {
-    // Cek lagi di dalam request
     if (!supabaseAdmin) {
       return NextResponse.json(
         {
@@ -39,12 +33,10 @@ export const GET = withAuth(async () => {
 
     console.log("🔄 Fetching sellers...");
 
-    // Cek apakah pakai Service Key atau Anon
     if (!process.env.SUPABASE_SERVICE_KEY) {
       console.warn("⚠️ PERINGATAN: Menggunakan Anon Key. Pastikan RLS diatur!");
     }
 
-    // --- QUERY UTAMA ---
     const { data, error } = await supabaseAdmin
       .from("sellers")
       .select(
@@ -56,11 +48,9 @@ export const GET = withAuth(async () => {
       )
       .order("created_at", { ascending: false });
 
-    // --- ERROR HANDLING & FALLBACK ---
     if (error) {
       console.error("❌ SUPABASE QUERY ERROR:", error.message);
 
-      // Fallback jika gagal join (masalah relasi DB)
       if (error.message.includes("relationship") || error.code === "PGRST200") {
         console.log("⚠️ Fallback: Mengambil data tanpa relasi lokasi...");
         const { data: fallbackData, error: fallbackError } = await supabaseAdmin
@@ -88,7 +78,6 @@ export const GET = withAuth(async () => {
   }
 }, ["admin"]);
 
-// ... (Bagian PUT tetap sama seperti sebelumnya) ...
 export const PUT = withAuth(
   async (request: Request) => {
     try {

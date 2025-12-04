@@ -55,17 +55,14 @@ const AdminStoreView = () => {
     getAllStore();
   }, []);
 
-  // --- 1. Auto-Discovery Provinsi (Ambil unik dari data toko) ---
   const uniqueProvinces = useMemo(() => {
     const provinces = listStore
-      .map((store) => store.provinces?.name) // Ambil nama provinsi dari relasi
-      .filter((name) => name); // Hapus yang null/undefined
+      .map((store) => store.provinces?.name)
+      .filter((name) => name);
 
-    // Hapus duplikat dan urutkan
     return Array.from(new Set(provinces)).sort();
   }, [listStore]);
 
-  // --- 2. Filter Logic (Search + Provinsi) ---
   const filteredStores = listStore.filter((store) => {
     const matchesSearch =
       store.store_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,17 +75,14 @@ const AdminStoreView = () => {
     return matchesSearch && matchesProvince;
   });
 
-  // --- SRS-MartPlace-09 & 10: Generate PDF Report ---
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
 
-    // Judul Dinamis
     const titleSuffix =
       provinceFilter !== "all"
         ? `WILAYAH: ${provinceFilter.toUpperCase()}`
         : "SEMUA WILAYAH";
 
-    // Header Laporan
     doc.setFontSize(16);
     doc.text("LAPORAN DAFTAR AKUN PENJUAL", 14, 20);
     doc.setFontSize(12);
@@ -97,7 +91,6 @@ const AdminStoreView = () => {
     doc.setFontSize(10);
     doc.text(`Tanggal Cetak: ${new Date().toLocaleString("id-ID")}`, 14, 35);
 
-    // Persiapan Data Tabel
     const tableColumn = [
       "No",
       "Nama Toko",
@@ -109,7 +102,6 @@ const AdminStoreView = () => {
     const tableRows: any[] = [];
 
     filteredStores.forEach((store, index) => {
-      // Ambil data lokasi dengan aman untuk PDF
       const city = store.cities?.name || "-";
       const province = store.provinces?.name || "-";
       const locationStr = `${city}, ${province}`;
@@ -125,16 +117,14 @@ const AdminStoreView = () => {
       tableRows.push(storeData);
     });
 
-    // Generate Tabel
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 45,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [249, 115, 22] }, // Orange-500
+      headStyles: { fillColor: [249, 115, 22] },
     });
 
-    // Nama file dinamis
     const fileName =
       provinceFilter !== "all"
         ? `Laporan_Penjual_${provinceFilter.replace(/\s/g, "_")}.pdf`
@@ -311,7 +301,7 @@ const AdminStoreView = () => {
                       </div>
                     </td>
 
-                    {/* Alamat (UPDATED: FIXED DISPLAY) */}
+                    {/* Alamat */}
                     <td className="p-4">
                       <div className="flex items-start gap-2 max-w-xs">
                         <MapPin
@@ -319,7 +309,6 @@ const AdminStoreView = () => {
                           className="text-red-500 mt-0.5 shrink-0"
                         />
                         <p className="text-slate-400 text-xs leading-relaxed">
-                          {/* Gabungkan semua dalam satu baris, biarkan CSS yang mengatur wrapping */}
                           {store.street}, RT {store.rt}/RW {store.rw},{" "}
                           {store.kelurahan}, {store.cities?.name || "-"},{" "}
                           {store.provinces?.name || "-"}

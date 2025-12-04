@@ -4,7 +4,6 @@ import { withAuth } from "@/utils/withAuth";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
-// Setup Supabase Client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey =
   process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,8 +20,6 @@ export const GET = withAuth(async () => {
       );
     }
 
-    // Query Produk dengan Relasi Lengkap untuk Laporan
-    // Kita butuh: Produk, Kategori, Toko -> Provinsi, Reviews (untuk hitung rating)
     const { data, error } = await supabaseAdmin
       .from("products")
       .select(

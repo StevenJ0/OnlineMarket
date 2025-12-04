@@ -1,68 +1,73 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
-import Link from "next/link"
+import type React from "react";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginForm() {
-  console.log("jalan")
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
+  console.log("jalan");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
-  })
-
+  });
 
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setLoginData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const payload = {
-      email: loginData.email,
-      password: loginData.password,
-      rememberMe,
-    };
+    try {
+      const payload = {
+        email: loginData.email,
+        password: loginData.password,
+        rememberMe,
+      };
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (!res.ok) {
-      alert(result.error || "Login failed.");
-      return;
+      console.log("bujank");
+      console.log(result);
+
+      if (!res.ok) {
+        alert(result.error || "Login failed.");
+        return;
+      }
+
+      window.location.href = "/dashboard";
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Something went wrong. Please try again.");
     }
-
-    window.location.href = "/dashboard";
-
-  } catch (error) {
-    console.error("Login error:", error);
-    alert("Something went wrong. Please try again.");
-  }
-};
+  };
 
   return (
     <div className="w-full">
       <h1 className="text-3xl font-bold text-white mb-2">Masuk ke Akun</h1>
-      <p className="text-blue-100 text-sm mb-8">Akses akun MyStore untuk mulai berjualan atau berbelanja</p>
+      <p className="text-blue-100 text-sm mb-8">
+        Akses akun MyStore untuk mulai berjualan atau berbelanja
+      </p>
 
       <form onSubmit={handleLoginSubmit} className="space-y-6">
         {/* Email Field */}
         <div>
-          <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">EMAIL ADDRESS</label>
+          <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">
+            EMAIL ADDRESS
+          </label>
           <input
             type="email"
             name="email"
@@ -75,7 +80,9 @@ export default function LoginForm() {
 
         {/* Password Field */}
         <div>
-          <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">KATA SANDI</label>
+          <label className="block text-xs font-semibold text-blue-100 mb-2 tracking-wider">
+            KATA SANDI
+          </label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -105,7 +112,10 @@ export default function LoginForm() {
             />
             <span className="text-sm text-white/80">Ingat saya</span>
           </label>
-          <a href="#" className="text-sm text-white/70 hover:text-white transition">
+          <a
+            href="#"
+            className="text-sm text-white/70 hover:text-white transition"
+          >
             Lupa kata sandi?
           </a>
         </div>
@@ -132,12 +142,15 @@ export default function LoginForm() {
         <div className="text-center">
           <p className="text-sm text-white/80">
             Belum punya akun?{" "}
-            <Link href="/register" className="text-orange-300 hover:text-orange-200 font-semibold transition">
+            <Link
+              href="/register"
+              className="text-orange-300 hover:text-orange-200 font-semibold transition"
+            >
               Daftar sebagai User
             </Link>
           </p>
         </div>
       </form>
     </div>
-  )
+  );
 }
