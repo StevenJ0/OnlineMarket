@@ -140,22 +140,26 @@ export default function HomeView() {
       {/* KATEGORI */}
       <section className="py-12 border-y border-slate-900 bg-slate-950/50">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-white">Kategori Pilihan</h2>
-            <Link
-              href="/categories"
-              className="text-orange-400 hover:text-orange-300 flex items-center gap-1"
-            >
-              Lihat Semua <ArrowRight size={16} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div
+            className={
+              categories.length === 1
+                ? // 1 item → benar2 di tengah
+                  "flex justify-center"
+                : categories.length <= 3
+                ? // 2–3 item → tetap di tengah, sejajar
+                  "flex flex-wrap justify-center gap-6"
+                : // 4+ item → baru pakai grid biasa
+                  "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 justify-items-center"
+            }
+          >
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
-                className="flex flex-col items-center justify-center p-6 bg-slate-900 border border-slate-800 rounded-2xl hover:border-orange-500/50"
+                className="flex flex-col items-center justify-center
+                          w-40 h-32 md:w-48 md:h-32
+                          bg-slate-900 border border-slate-800
+                          rounded-2xl hover:border-orange-500/50"
               >
                 <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mb-3">
                   <Tag size={20} />
@@ -166,6 +170,8 @@ export default function HomeView() {
           </div>
         </div>
       </section>
+
+
 
       {/* PRODUK TERBARU */}
       <section className="py-20 max-w-7xl mx-auto px-4">
