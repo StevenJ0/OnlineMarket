@@ -10,6 +10,7 @@ import { supabase } from '../../../lib/supabase/init';
 import { Star, Store, ArrowLeft, Share2, Package, MapPin } from 'lucide-react';
 
 async function getProductData(id: string) {
+  console.log(id)
   try {
     const productQuery = supabase
       .from('products')
@@ -108,7 +109,9 @@ type Props = { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  console.log("Generating metadata for product ID:", id);
   const product = await getProductData(id);
+  console.log("Product data for metadata:", product);
   if (!product) return { title: 'Produk Tidak Ditemukan' };
   return { title: `${product.name} | MarketPlace`, description: product.description?.slice(0, 150) };
 }

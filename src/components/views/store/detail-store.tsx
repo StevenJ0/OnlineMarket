@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import PendingStoreView from "./pending-store-view";
 import RejectStoreView from "./reject-store-view";
@@ -10,23 +12,13 @@ export default function DetailStoreView({ storeId }: DetailStoreProps) {
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const getStoreById = async (storeId: string) => {
-    const res = await fetch(`/api/detailStore?storeId=${storeId}`, {
-      method: "GET",
-    });
-
-    return await res.json();
-  };
-
   useEffect(() => {
     async function load() {
       try {
-        const storeRes = await getStoreById(storeId);
+        const res = await fetch(`/api/detailStore?storeId=${storeId}`);
+        const json = await res.json();
 
-        // storeRes.store.data adalah array
-        const dbStore = storeRes.store?.data?.[0] || null;
-
-        setStore(dbStore);
+        setStore(json.store?.data?.[0] || null);
       } catch (err) {
         console.error("Fetch error:", err);
       } finally {
@@ -34,25 +26,18 @@ export default function DetailStoreView({ storeId }: DetailStoreProps) {
       }
     }
 
-    load();
+    if (storeId) load();
   }, [storeId]);
 
   if (loading) return <div>Loading...</div>;
   if (!store) return <div>Store tidak ditemukan.</div>;
 
-  if (store.status === "pending" || store.status === "awaiting_activation") {
-    return (
-      <PendingStoreView />
-    );
-  }
+  if (store.status === "pending" || store.status === "awaiting_activation")
+    return <PendingStoreView />;
 
-  if (store.status === "rejected") {
-    return (
-        <RejectStoreView />
-    );
-  }
+  if (store.status === "rejected") 
+    return <RejectStoreView />;
 
-  // status approved → tampilkan detail store
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-2">{store.store_name}</h1>

@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import RegisterStoreView from "./store-form";
 import DetailStoreView from "./detail-store";
+import { useRouter } from "next/navigation";
 
 const StoreView = () => {
   const [user, setUser] = useState<any>(null);
   const [store, setStore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
 
   const getStoreByUserId = async (userId: string) => {
     const res = await fetch(`/api/store?userId=${userId}`, {
@@ -33,10 +36,15 @@ const StoreView = () => {
       }
 
       const storeRes = await getStoreByUserId(session.user.id);
-      console.log(storeRes)
+
       setUser(session.user);
       setStore(storeRes.store);
       setLoading(false);
+
+      // 🔥 ketika store ada → redirect
+      if (storeRes.store?.id) {
+        router.push(`/store/${storeRes.store.id}`);
+      }
     }
 
     load();
@@ -49,8 +57,8 @@ const StoreView = () => {
   if (!store) {
     return <RegisterStoreView userId={user.id} />;
   }
-  console.log("jalan")
-  return <DetailStoreView storeId={store.id}  />;
+
+  return null; // tidak pernah dipakai karena sudah redirect
 };
 
 export default StoreView;
