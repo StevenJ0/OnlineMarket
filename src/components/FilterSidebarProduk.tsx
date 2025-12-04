@@ -1,3 +1,5 @@
+//src/components/FilterSidebarProduk.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,7 +26,6 @@ export default function FilterSidebarProduk({
   onCategoryChange,
   onLocationChange,
 }: any) {
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -64,7 +65,6 @@ export default function FilterSidebarProduk({
       }));
 
       setLocationTree(tree);
-
     } catch (error) {
       console.error("Error locations:", error);
     }
@@ -80,7 +80,6 @@ export default function FilterSidebarProduk({
 
   return (
     <aside className="w-full lg:w-64 flex-shrink-0 space-y-8">
-
       {/* ===================== */}
       {/* FILTER KATEGORI       */}
       {/* ===================== */}
@@ -91,13 +90,18 @@ export default function FilterSidebarProduk({
 
         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
           {categories.map((cat) => (
-            <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
+            <label
+              key={cat.id}
+              className="flex items-center gap-3 cursor-pointer group"
+            >
               <input
                 type="checkbox"
                 className="hidden"
                 checked={filterCategory === cat.name}
                 onChange={() =>
-                  onCategoryChange(filterCategory === cat.name ? null : cat.name)
+                  onCategoryChange(
+                    filterCategory === cat.name ? null : cat.name
+                  )
                 }
               />
 
