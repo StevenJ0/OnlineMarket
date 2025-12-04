@@ -10,8 +10,27 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState("");
+
+  const fetchProvinces = async () => {
+    try {
+      const res = await fetch("/api/provinces", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      return data.data;
+    } catch (error) {
+      console.error("Error fetching provinces:", error);
+      return [];
+    }
+  };
+
   useEffect(() => {
-    async function fetchSession() {
+    async function init() {
       try {
         const res = await fetch("/api/auth/session", {
           method: "GET",
@@ -22,10 +41,35 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
       } catch (error) {
         console.error("Error fetching session:", error);
       }
+
+      const prov = await fetchProvinces();
+      setProvinces(prov || []);
     }
 
-    fetchSession();
+    init();
   }, []);
+
+  console.log("Provinces loaded:", provinces);
+
+  const handleProvinceChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const provinceId = e.target.value;
+    setSelectedProvince(provinceId);
+
+    try {
+      const res = await fetch(`/api/cities?provinceId=${provinceId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      setCities(data.cities ?? []);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    }
+  };
+
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -55,7 +99,6 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
     }
   }
 
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-10">
       <a
@@ -84,33 +127,31 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
             <h1 className="mt-4 text-3xl font-bold text-[#49777B]">
               Registrasi Data Penjual (Toko)
             </h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Lengkapi data berikut untuk membuka toko. Tanda{" "}
-              <span className="font-bold text-[#F67103]">*</span> wajib diisi.
-            </p>
           </div>
 
           <form className="space-y-8" onSubmit={handleSubmit}>
+            {/* ---------------- DATA TOKO ---------------- */}
             <section>
               <SectionTitle title="Data Toko" />
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <InputField
-                  name="storeName" 
+                  name="storeName"
                   label="Nama Toko"
                   required
                   placeholder="Contoh: Toko Elektronik Maju"
                 />
                 <InputField
-                  name="description" 
+                  name="description"
                   label="Deskripsi Singkat"
                   as="textarea"
                   required
-                  placeholder="Ceritakan secara singkat tentang toko Anda..."
+                  placeholder="Deskripsi toko..."
                   className="md:col-span-2"
                 />
               </div>
             </section>
 
+            {/* ---------------- DATA PIC ---------------- */}
             <section>
               <SectionTitle title="Data PIC" />
               <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -118,28 +159,22 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
                   name="picName"
                   label="Nama PIC"
                   required
-                  placeholder="Nama penanggung jawab"
                   className="md:col-span-2"
-                  defaultValue={user?.name || ""} 
+                  defaultValue={user?.name}
                 />
-                <InputField
-                  name="picPhone"
-                  label="No HP PIC"
-                  required
-                  placeholder="08xxxxxxxxxx"
-                />
+                <InputField name="picPhone" label="No HP PIC" required />
                 <InputField
                   name="picEmail"
                   label="Email PIC"
                   type="email"
                   required
-                  placeholder="nama@email.com"
                   className="md:col-span-3"
-                  defaultValue={user?.email || ""} 
+                  defaultValue={user?.email}
                 />
               </div>
             </section>
 
+            {/* ---------------- ALAMAT ---------------- */}
             <section>
               <SectionTitle title="Alamat PIC" />
               <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -147,32 +182,63 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
                   name="addressStreet"
                   label="Jalan"
                   required
-                  placeholder="Jl. Contoh No. 123"
                   className="md:col-span-2"
                 />
-                <InputField name="addressRt" label="RT" required placeholder="001" />
-                <InputField name="addressRw" label="RW" required placeholder="002" />
+
+                <InputField name="addressRt" label="RT" required />
+                <InputField name="addressRw" label="RW" required />
+
+                {/* 🔥 Dropdown Province */}
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-700">
+                    Provinsi<span className="ml-1 text-[#F67103]">*</span>
+                  </label>
+                  <select
+                    name="provinceId"
+                    required
+                    value={selectedProvince}
+                    onChange={handleProvinceChange}
+                    className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-black"
+                  >
+                    <option value="">Pilih Provinsi</option>
+                    {provinces.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 🔥 Dropdown City */}
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-700">
+                    Kota/Kabupaten<span className="ml-1 text-[#F67103]">*</span>
+                  </label>
+                  <select
+                    name="cityId"
+                    required
+                    disabled={!selectedProvince}
+                    className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-black"
+                  >
+                    <option value="">Pilih Kota/Kabupaten</option>
+                    {cities.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <InputField
-                  name="addressVillage"
+                  name="kelurahan"
                   label="Kelurahan"
                   required
                   placeholder="Nama kelurahan"
                 />
-                <InputField
-                  name="addressDistrict"
-                  label="Kab/Kota"
-                  required
-                  placeholder="Nama kabupaten/kota"
-                />
-                <InputField
-                  name="addressProvince"
-                  label="Provinsi"
-                  required
-                  placeholder="Nama provinsi"
-                />
               </div>
             </section>
 
+            {/* ---------------- DOKUMEN ---------------- */}
             <section>
               <SectionTitle title="Dokumen Identitas PIC" />
               <div className="mt-4 grid gap-4">
@@ -187,29 +253,30 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
                   name="picPhoto"
                   label="Foto PIC"
                   required
-                  helper="Format jpg/png, ukuran maksimal 2MB"
+                  helper="Format jpg/png, maksimal 2MB"
                 />
 
                 <FileField
                   name="ktpFile"
                   label="File KTP"
                   required
-                  helper="Format jpg/png/pdf, ukuran maksimal 5MB"
+                  helper="Format jpg/png/pdf, maksimal 5MB"
                 />
               </div>
             </section>
 
-            <div className="mt-6 flex flex-col gap-3 border-t border-dashed border-gray-300 pt-6 sm:flex-row sm:justify-end">
+            {/* ---------------- BUTTON ---------------- */}
+            <div className="mt-6 flex flex-col gap-3 border-t border-dashed pt-6 sm:flex-row sm:justify-end">
               <a
                 href="/"
-                className="w-full text-center sm:text-left rounded-lg border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:border-[#49777B] hover:text-[#49777B] sm:w-auto"
+                className="w-full rounded-lg border border-gray-300 px-6 py-3 text-center text-sm font-semibold text-gray-700 hover:border-[#49777B] hover:text-[#49777B] sm:w-auto"
               >
                 Batal
               </a>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-lg bg-[#F67103] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#F67103]/40 transition hover:-translate-y-0.5 hover:bg-[#D4800C] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+                className="w-full rounded-lg bg-[#F67103] px-6 py-3 text-sm font-semibold text-white shadow-md sm:w-auto"
               >
                 {isLoading ? "Memproses..." : "Registrasi Penjual"}
               </button>
@@ -220,6 +287,8 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
     </main>
   );
 }
+
+
 
 // --- COMPONENTS ---
 

@@ -7,13 +7,14 @@ import { MapPin, ShoppingCart, Star, Store, ArrowLeft, Share2 } from 'lucide-rea
 import { Metadata } from 'next';
 
 async function getProductData(id: string) {
+  console.log(id)
   try {
     const { data, error } = await supabase
       .from('products')
       .select(`
         id, name, description, price, stock,
         category:categories(name),
-        seller:sellers(store_name, kota, provinsi),
+        seller:sellers(store_name, city_id , province_id),
         images:product_images(image_url),
         reviews:product_reviews(rating, comment, guest_name, created_at)
       `)
@@ -55,7 +56,9 @@ type Props = { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  console.log("Generating metadata for product ID:", id);
   const product = await getProductData(id);
+  console.log("Product data for metadata:", product);
   if (!product) return { title: 'Produk Tidak Ditemukan' };
   return { title: `${product.name} | MarketPlace`, description: product.description?.slice(0, 150) };
 }
