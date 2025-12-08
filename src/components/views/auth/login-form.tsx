@@ -132,8 +132,8 @@ export default function LoginForm() {
         <div className="text-center">
           <p className="text-sm text-white/80">
             Belum punya akun?{" "}
-            <Link href="/register" className="text-orange-300 hover:text-orange-200 font-semibold transition">
-              Daftar sebagai User
+            <Link href="/buka-toko" className="text-orange-300 hover:text-orange-200 font-semibold transition">
+              Daftar Toko
             </Link>
           </p>
         </div>

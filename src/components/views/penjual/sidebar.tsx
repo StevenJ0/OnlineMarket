@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type MenuItem = {
   name: string;
@@ -15,8 +17,48 @@ const menu: MenuItem[] = [
   { name: "View Rating", href: "/penjual/reting" },
 ];
 
+
+
 export function Sidebar() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  console.log(user);
+
   const path = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+      const fetchSession = async () => {
+        try {
+          const res = await fetch("/api/auth/session", {
+            method: "GET",
+            credentials: "include",
+          });
+
+          if (!res.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          const data = await res.json();
+          setUser(data.user);
+        } catch (error) {
+          console.error("Gagal mengambil sesi:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchSession();
+    }, []);
+
+    useEffect(() => {
+      if (!loading && user === null || user === undefined) {
+        router.push("/login");
+      }
+    }, [loading, user, router]);
+
+    if (loading) return null;
 
   return (
     <aside className="w-72 min-h-screen bg-[#050815] border-r border-slate-800/80 flex flex-col justify-between shadow-xl">
@@ -26,11 +68,11 @@ export function Sidebar() {
         <div className="px-6 py-5 border-b border-slate-800/80 bg-gradient-to-r from-[#060b1b] via-[#080d20] to-[#060b1b]">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-[#ff7a1a] flex items-center justify-center font-bold text-slate-900 shadow-[0_0_18px_rgba(255,122,26,0.55)]">
-              M
+              {user && user.email ? user.email.charAt(0).toUpperCase() : "U"}
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-50">MyStore Admin</p>
-              <p className="text-xs text-slate-400">Dashboard Penjual</p>
+              <p className="text-sm font-semibold text-slate-50 ">Dashboard Penjual</p>
+              <p className="text-xs text-slate-400">{user && user.email ? user.email : "User"}</p>
             </div>
           </div>
         </div>

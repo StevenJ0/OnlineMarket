@@ -55,7 +55,7 @@ const StoreView = () => {
   if (!user) return <div>Anda harus login untuk mengakses halaman ini.</div>;
 
   if (!store) {
-    return <RegisterStoreView userId={user.id} />;
+    return <RegisterStoreView  />;
   }
 
   return null; // tidak pernah dipakai karena sudah redirect

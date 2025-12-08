@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Package,
@@ -10,6 +10,8 @@ import {
   UploadCloud,
   PlusCircle,
   AlertTriangle,
+  X,
+  Image,
 } from "lucide-react";
 
 export type ProductFormValues = {
@@ -17,16 +19,24 @@ export type ProductFormValues = {
   price: string;
   stock: string;
   description: string;
+  category_id?: string;
+  status?: string;
 };
 
 type ProductFormViewProps = {
-  mode: "create" | "edit";              // "create" untuk tambah, "edit" untuk edit
-  initialValues?: ProductFormValues;    // data awal saat edit (opsional)
+  mode: "create" | "edit";              
+  initialValues?: ProductFormValues;    
+  initialImages?: string[];
+  initialPrimaryIndex?: number;
+  productId?: string;
 };
 
 const ProductFormView: React.FC<ProductFormViewProps> = ({
   mode,
   initialValues,
+  initialImages = [],
+  initialPrimaryIndex = 0,
+  productId,
 }) => {
   const [form, setForm] = useState<ProductFormValues>(
     initialValues ?? {
@@ -37,7 +47,23 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
     }
   );
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  console.log("initialValues:", initialValues);
+  console.log("initialImages:", initialImages);
+  console.log("initialPrimaryIndex:", initialPrimaryIndex);
+  console.log(productId)
+
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(initialImages || []);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialValues?.category_id || "");
+  const [status, setStatus] = useState<string>(initialValues?.status || "active");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [userSession, setUserSession] = useState<any>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [primaryIndex, setPrimaryIndex] = useState<number | null>(initialPrimaryIndex);
+
+  console.log(primaryIndex);
+
   const router = useRouter();
 
   const handleChange = (
@@ -50,25 +76,164 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
     }));
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
+  const fetchAllCategories = async () => {
+    try {
+      const res = await fetch("/api/categories", { method: "GET" });
+      const data = await res.json();
+      return data.data[0] || [];
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      return [];
+    }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  useEffect(() => {
+    const loadCategories = async () => {
+      const data = await fetchAllCategories();
+      setCategories(data);
+    };
+
+    const fetchSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session", { method: "GET" });
+        const data = await res.json();
+        setUserSession(data.user);
+        setSessionId(data.user?.id || null);
+      } catch (err) {
+        console.error("Gagal mengambil sesi:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (initialValues) {
+        if (initialValues.category_id) setSelectedCategory(initialValues.category_id);
+        if (initialValues.status) setStatus(initialValues.status);
+    }
+
+    if (mode === "edit" ) {
+      setImagePreviews(initialImages);
+      setPrimaryIndex(initialPrimaryIndex);
+    }
+    loadCategories();
+    fetchSession();
+  }, [initialImages, initialPrimaryIndex, initialValues, mode]);
+
+  console.log("User session:", userSession);
+  console.log("Session ID:", sessionId);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const files = Array.from(e.target.files);
+    
+    // Tambahkan file baru ke array yang sudah ada
+    const newImages = [...images, ...files];
+    setImages(newImages);
+
+    // Generate preview untuk file baru
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index: number) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+
+    if (primaryIndex === index) {
+      setPrimaryIndex(0);
+    } else if (primaryIndex! > index) {
+      setPrimaryIndex(primaryIndex! - 1);
+    }
+  };
+
+  const handleCreateProduct = async () => {
+    if (images.length === 0) {
+      alert("Harap upload minimal 1 gambar produk");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("price", form.price);
+      formData.append("stock", form.stock);
+      formData.append("description", form.description);
+      formData.append("category_id", selectedCategory);
+      formData.append("status", status);
+
+      // Append semua images
+      images.forEach((file) => formData.append("images", file));
+      formData.append("primaryIndex", primaryIndex?.toString() || "0");
+
+      const res = await fetch("/api/penjual/product?storeId=" + sessionId, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        router.push("/penjual/product");
+      } else {
+        const error = await res.json();
+        alert(error.message || "Gagal menambahkan produk");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan saat menambahkan produk.");
+    }
+  }
+
+  const handleEditProduct = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("price", form.price);
+      formData.append("stock", form.stock);
+      formData.append("description", form.description);
+      formData.append("category_id", selectedCategory);
+      formData.append("status", status);
+
+      formData.append("primaryIndex", primaryIndex?.toString() || "0");
+
+      images.forEach((file) => formData.append("images", file));
+
+      const existingImages = imagePreviews.filter((url) => !url.startsWith("blob:"));
+      formData.append("existingImages", JSON.stringify(existingImages));
+      const res = await fetch("/api/penjual/product?productId=" + productId  + "&storeId=" + sessionId, {
+        method: "PUT",
+        body: formData,
+      });
+      if (res.ok) {
+        router.push("/penjual/product");
+      } else {
+        const error = await res.json();
+        alert(error.message || "Gagal memperbarui produk");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan saat memperbarui produk.");
+    }
+  }
+
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // di sini nanti ganti dengan call ke backend / supabase
-    console.log("SUBMIT FORM:", mode, form);
-    alert(
-      mode === "create"
-        ? "Produk baru berhasil disimpan (dummy) 👍"
-        : "Perubahan produk berhasil disimpan (dummy) 👍"
-    );
+    if (mode === "create") {
+      await handleCreateProduct();
+    } else {
+      await handleEditProduct();
+    }
   };
+
+  // Cleanup preview URLs saat component unmount
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviews]);
 
   return (
     <div className="min-h-screen bg-[#050815]">
@@ -90,7 +255,7 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
           </div>
         </div>
 
-        {/* Card Form Tambah/Edit Produk */}
+        {/* Form */}
         <div className="bg-[#111418] border border-slate-800 rounded-2xl p-6 sm:p-7 lg:p-8 shadow-xl shadow-black/40">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -115,9 +280,9 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
             onSubmit={handleSubmit}
             className="grid grid-cols-1 lg:grid-cols-[2fr,1.2fr] gap-8"
           >
-            {/* Kolom kiri: input form */}
+            {/* Kiri */}
             <div className="space-y-5">
-              {/* Nama produk */}
+              {/* Nama */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
                   <Package className="w-4 h-4 text-slate-400" />
@@ -132,6 +297,27 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
                   className="w-full rounded-xl bg-[#0a0c10] border border-slate-700/70 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#ff7a1a]/70 focus:border-[#ff7a1a]"
                   required
                 />
+              </div>
+
+              {/* Kategori */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-slate-400" />
+                  Kategori Produk
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  required
+                  className="w-full rounded-xl bg-[#0a0c10] border border-slate-700/70 px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#ff7a1a]/70 focus:border-[#ff7a1a]"
+                >
+                  <option value="">Pilih Kategori</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Harga & Stok */}
@@ -191,7 +377,24 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
                 />
               </div>
 
-              {/* Tombol submit */}
+              {/* Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-slate-400" />
+                  Status Produk
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  required
+                  className="w-full rounded-xl bg-[#0a0c10] border border-slate-700/70 px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#ff7a1a]/70 focus:border-[#ff7a1a]"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              {/* Tombol */}
               <div className="pt-2 flex justify-end">
                 <div className="flex items-center gap-3">
                   <button
@@ -213,12 +416,14 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
               </div>
             </div>
 
-            {/* Kolom kanan: upload + preview */}
+            {/* Kanan: Upload + Preview */}
             <div className="space-y-4">
-              {/* Upload gambar */}
               <div className="rounded-xl border border-dashed border-slate-700/80 bg-[#0b0f17] p-4">
-                <p className="text-xs font-semibold text-slate-300 mb-2">
-                  Tampilan / Foto Produk
+                <p className="text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+                  <span>Tampilan / Foto Produk</span>
+                  {images.length > 0 && (
+                    <span className="text-[#ff7a1a]">{images.length} gambar</span>
+                  )}
                 </p>
                 <label className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-700/70 bg-slate-900/40 px-4 py-6 cursor-pointer hover:border-[#ff7a1a]/70 hover:bg-slate-900/80 transition-colors">
                   <UploadCloud className="w-6 h-6 text-[#ff7a1a]" />
@@ -226,62 +431,75 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
                     Klik untuk unggah gambar
                   </span>
                   <span className="text-[11px] text-slate-500">
-                    Format JPG, PNG, maksimal 2MB
+                    Format JPG, PNG. Bisa pilih beberapa gambar
                   </span>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={handleImageChange}
                   />
                 </label>
               </div>
 
-              {/* Preview */}
+              {/* Preview Multiple */}
               <div className="rounded-xl border border-slate-800 bg-[#0b0f17] p-4">
                 <p className="text-xs font-semibold text-slate-300 mb-3">
                   Preview Produk
                 </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {imagePreviews.length > 0 ? (
+                    imagePreviews.map((src, idx) => (
+                      <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-800">
+                        <img src={src} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
 
-                <div className="flex gap-3">
-                  <div className="w-20 h-20 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview produk"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Package className="w-6 h-6 text-slate-600" />
-                    )}
-                  </div>
+                        {/* Badge urutan */}
+                        <div className="absolute top-2 left-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">
+                          {idx + 1}
+                        </div>
 
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-semibold text-slate-100">
-                      {form.name || "Nama produk akan tampil di sini"}
-                    </p>
-                    <p className="text-xs text-slate-400 line-clamp-2">
-                      {form.description ||
-                        "Deskripsi singkat produk akan muncul di area ini."}
-                    </p>
-                    <p className="text-sm font-semibold text-[#ff7a1a] mt-1">
-                      {form.price
-                        ? `Rp ${Number(form.price).toLocaleString("id-ID")}`
-                        : "Rp 0"}
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      Stok: {form.stock || "0"} unit
-                    </p>
-                  </div>
+                        {/* Badge Primary */}
+                        {primaryIndex === idx && (
+                          <div className="absolute bottom-2 left-2 bg-[#ff7a1a] text-black text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                            PRIMARY
+                          </div>
+                        )}
+
+                        {/* Tombol hapus */}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+
+                        {/* Tombol jadikan primary */}
+                        {primaryIndex !== idx && (
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryIndex(idx)}
+                            className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Jadikan Utama
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 flex flex-col items-center justify-center py-8 text-slate-600">
+                      <Image className="w-8 h-8 mb-2" />
+                      <span className="text-xs">Belum ada gambar</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Info kecil */}
-              <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                <AlertTriangle className="w-3 h-3 text-yellow-400" />
+              <div className="flex items-start gap-2 text-[11px] text-slate-500">
+                <AlertTriangle className="w-3 h-3 text-yellow-400 mt-0.5 flex-shrink-0" />
                 <span>
-                  Pastikan data sudah benar. Anda dapat mengedit produk setelah
-                  disimpan.
+                  Upload minimal 1 gambar. Gambar pertama akan menjadi foto utama produk.
                 </span>
               </div>
             </div>
