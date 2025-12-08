@@ -18,6 +18,27 @@ const DashboardView = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+
+    const fecthSessionAndChecckRole = async () => {
+      try {
+        const res = await fetch("/api/auth/session", { credentials: "include" });
+        const data = await res.json();
+        if (!data.loggedIn) {
+          window.location.href = "/login";
+        }
+
+        console.log(data.user.email); 
+
+        if (data.user.email != "stevenjonathanalfredo785@gmail.com"){
+          window.location.href = "/";
+        }
+        console.log("Session data:", data);
+      } catch (err) {
+        console.error("Gagal mengambil sesi:", err);
+      }
+    };
+    fecthSessionAndChecckRole();
+
     const fetchData = async () => {
       try {
         const res = await fetch("/api/admin/dashboard");

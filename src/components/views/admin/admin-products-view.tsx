@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   Download,
   Search,
@@ -17,6 +17,8 @@ const AdminProductsView = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // --- Helpers ---
+
   const formatRupiah = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -31,6 +33,8 @@ const AdminProductsView = () => {
     const total = reviews.reduce((acc, curr) => acc + curr.rating, 0);
     return parseFloat((total / reviews.length).toFixed(1));
   };
+
+  // --- Fetch Data ---
 
   const getProducts = async () => {
     try {
@@ -57,18 +61,44 @@ const AdminProductsView = () => {
     }
   };
 
+  // --- Auth Check ---
+
   useEffect(() => {
+    const fecthSessionAndChecckRole = async () => {
+      try {
+        const res = await fetch("/api/auth/session", { credentials: "include" });
+        const data = await res.json();
+        if (!data.loggedIn) {
+          window.location.href = "/login";
+          return;
+        }
+
+        console.log(data.user.email);
+
+        // Security Note: Idealnya validasi role dilakukan di Middleware / Server Side juga
+        if (data.user.email !== "stevenjonathanalfredo785@gmail.com") {
+          window.location.href = "/";
+        }
+        console.log("Session data:", data);
+      } catch (err) {
+        console.error("Gagal mengambil sesi:", err);
+      }
+    };
+
+    fecthSessionAndChecckRole();
     getProducts();
   }, []);
+
+  // --- Filter Logic ---
 
   const filteredProducts = products.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.sellers?.store_name
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+      item.sellers?.store_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.categories?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // --- PDF Generation ---
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
@@ -90,7 +120,7 @@ const AdminProductsView = () => {
     ];
     const tableRows: any[] = [];
 
-    filteredStores.forEach((item: any, index: number) => {
+    filteredProducts.forEach((item: any, index: number) => {
       const rowData = [
         index + 1,
         item.name,
@@ -108,7 +138,7 @@ const AdminProductsView = () => {
       body: tableRows,
       startY: 40,
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [249, 115, 22] },
+      headStyles: { fillColor: [249, 115, 22] }, // Orange color
       columnStyles: {
         6: { fontStyle: "bold", halign: "center" },
       },
@@ -117,7 +147,7 @@ const AdminProductsView = () => {
     doc.save("Laporan_Produk_Rating.pdf");
   };
 
-  const filteredStores = filteredProducts;
+  // --- Render ---
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 p-6 md:p-8">
@@ -182,100 +212,115 @@ const AdminProductsView = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {filteredProducts.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-slate-800/50 transition-colors group"
-                  >
-                    {/* Produk */}
-                    <td className="p-4 pl-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700">
-                          {item.product_images?.[0]?.image_url ? (
-                            <img
-                              src={item.product_images[0].image_url}
-                              alt=""
-                              className="w-full h-full object-cover"
+                {filteredProducts.map((item) => {
+                  // LOGIC IMAGE: Cari yg primary, kalau tidak ada ambil index 0
+                  const displayImage =
+                    item.product_images?.find((img: any) => img.is_primary)
+                      ?.image_url || item.product_images?.[0]?.image_url;
+
+                  return (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-slate-800/50 transition-colors group"
+                    >
+                      {/* Produk Column */}
+                      <td className="p-4 pl-6">
+                        <div className="flex items-center gap-4">
+                          {/* Image Wrapper */}
+                          <div className="w-16 h-16 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700 shadow-sm relative group-hover:border-slate-600 transition-colors">
+                            {displayImage ? (
+                              <img
+                                src={displayImage}
+                                alt={item.name}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                            ) : (
+                              <ShoppingBag
+                                size={20}
+                                className="text-slate-600"
+                              />
+                            )}
+                          </div>
+
+                          {/* Product Info */}
+                          <div className="flex flex-col gap-1">
+                            <p className="font-bold text-white line-clamp-2 leading-tight w-48 group-hover:text-orange-400 transition-colors">
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] font-mono text-slate-500 bg-slate-950/50 px-1.5 py-0.5 rounded w-fit border border-slate-800">
+                              ID: {item.id.slice(0, 8)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Kategori */}
+                      <td className="p-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap">
+                          {item.categories?.name || "Uncategorized"}
+                        </span>
+                      </td>
+
+                      {/* Toko & Lokasi */}
+                      <td className="p-4">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5 text-white font-medium text-xs mb-0.5">
+                            <Store size={12} className="text-orange-500" />
+                            <span>{item.sellers?.store_name}</span>
+                          </div>
+                          <p className="text-slate-500 text-xs">
+                            {item.sellers?.provinces?.name ||
+                              "Lokasi Tidak Diketahui"}
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* Harga */}
+                      <td className="p-4 font-mono text-slate-300">
+                        {formatRupiah(item.price)}
+                      </td>
+
+                      {/* Rating */}
+                      <td className="p-4 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="flex items-center gap-1">
+                            <Star
+                              size={14}
+                              className={`fill-current ${
+                                item.avgRating > 0
+                                  ? "text-yellow-500"
+                                  : "text-slate-700"
+                              }`}
                             />
-                          ) : (
-                            <ShoppingBag size={16} className="text-slate-500" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-white line-clamp-1">
-                            {item.name}
-                          </p>
-                          <p className="text-[10px] text-slate-500">
-                            ID: {item.id.slice(0, 8)}...
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Kategori */}
-                    <td className="p-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        {item.categories?.name || "Uncategorized"}
-                      </span>
-                    </td>
-
-                    {/* Toko & Lokasi */}
-                    <td className="p-4">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5 text-white font-medium text-xs mb-0.5">
-                          <Store size={12} className="text-orange-500" />
-                          <span>{item.sellers?.store_name}</span>
-                        </div>
-                        <p className="text-slate-500 text-xs">
-                          {item.sellers?.provinces?.name ||
-                            "Lokasi Tidak Diketahui"}
-                        </p>
-                      </div>
-                    </td>
-
-                    {/* Harga */}
-                    <td className="p-4 font-mono text-slate-300">
-                      {formatRupiah(item.price)}
-                    </td>
-
-                    {/* Rating */}
-                    <td className="p-4 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-1">
-                          <Star
-                            size={14}
-                            className={`fill-current ${
-                              item.avgRating > 0
-                                ? "text-yellow-500"
-                                : "text-slate-700"
-                            }`}
-                          />
-                          <span
-                            className={`font-bold ${
-                              item.avgRating > 0
-                                ? "text-white"
-                                : "text-slate-600"
-                            }`}
-                          >
-                            {item.avgRating > 0 ? item.avgRating : "-"}
+                            <span
+                              className={`font-bold ${
+                                item.avgRating > 0
+                                  ? "text-white"
+                                  : "text-slate-600"
+                              }`}
+                            >
+                              {item.avgRating > 0 ? item.avgRating : "-"}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-600 mt-1">
+                            {item.product_reviews?.length || 0} Ulasan
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-600 mt-1">
-                          {item.product_reviews?.length || 0} Ulasan
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
 
         {!loading && (
-          <div className="bg-slate-950/50 p-4 border-t border-slate-800 text-xs text-slate-500">
-            Menampilkan {filteredProducts.length} produk diurutkan berdasarkan
-            rating tertinggi.
+          <div className="bg-slate-950/50 p-4 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
+            <span>
+              Menampilkan {filteredProducts.length} produk diurutkan berdasarkan
+              rating tertinggi.
+            </span>
           </div>
         )}
       </div>

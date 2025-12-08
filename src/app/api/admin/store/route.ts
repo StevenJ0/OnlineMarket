@@ -76,7 +76,7 @@ export const GET = withAuth(async () => {
       { status: 500 }
     );
   }
-}, ["admin"]);
+}, ["seller"]);
 
 export const PUT = withAuth(
   async (request: Request) => {
@@ -108,6 +108,7 @@ export const PUT = withAuth(
       const currentStore = store.data[0];
 
       if (status === "awaiting_activation") {
+        console.log("jalan")
         const token = crypto.randomUUID();
         const expires = new Date();
         expires.setHours(expires.getHours() + 24);
@@ -150,5 +151,5 @@ export const PUT = withAuth(
       );
     }
   },
-  ["admin"]
+  ["seller"]
 );

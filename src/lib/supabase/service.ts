@@ -49,7 +49,42 @@ export async function uploadFile(bucket: string, filePath: string, file: File) {
 }
 
 export async function verifyUserActivation(token: string) {
-  // ... (Kode aktivasi email tetap sama)
+  if (!token) {
+    return { status: "invalid", message: "Token tidak ditemukan" };
+  }
+
+  const { data: seller, error } = await RetrieveDataByField("sellers", {
+    activation_token: token,
+  });
+
+  if (error) {
+    return { status: "error", message: "Terjadi kesalahan pada server" };
+  }
+
+  if (!seller || seller.length === 0) {
+    return { status: "invalid", message: "Token tidak valid" };
+  }
+
+  const user = seller[0];
+
+  const now = new Date();
+  const expires = new Date(user.activation_expires); // ← PERBAIKAN DI SINI
+
+  if (now > expires) {
+    return { status: "expired", message: "Token sudah kadaluarsa" };
+  }
+
+  const { error: updateError } = await updateData("sellers", user.id, {
+    status: "active",
+    activation_token: null,
+    activation_expires: null,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (updateError) {
+    return { status: "error", message: "Gagal mengupdate data seller" };
+  }
+
   return { status: "success", message: "Toko berhasil diaktifkan" };
 }
 
@@ -81,7 +116,7 @@ export type RegionSalesData = {
 // Helper
 export async function getSellerByUserId(userId: string) {
   if (!supabaseAdmin) return { data: null, error: { message: "Server config error" } };
-  const { data, error } = await supabaseAdmin.from("sellers").select("*").eq("id", userId).single();
+  const { data, error } = await supabaseAdmin.from("sellers").select("*").eq("user_id", userId).single();
   return { data, error };
 }
 

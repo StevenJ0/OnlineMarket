@@ -9,7 +9,8 @@ const supabaseKey =
 const supabaseAdmin =
   supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
-export const GET = withAuth(async () => {
+export async function GET(request: Request) {
+  console.log("Admin dashboard accessed");
   try {
     if (!supabaseAdmin) {
       return NextResponse.json(
@@ -65,4 +66,4 @@ export const GET = withAuth(async () => {
       { status: 500 }
     );
   }
-}, ["admin"]);
+}

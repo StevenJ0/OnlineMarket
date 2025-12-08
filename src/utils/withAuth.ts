@@ -23,6 +23,8 @@ export function withAuth(
 
       const decoded = jwt.verify(token, SECRET) as any;
 
+      console.log(decoded)
+
       if (allowedRoles.length > 0 && !allowedRoles.includes(decoded.role)) {
         return NextResponse.json(
           { message: "Forbidden", redirect: "/" },

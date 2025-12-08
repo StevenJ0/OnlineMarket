@@ -30,9 +30,11 @@ export const GET = withAuth(async () => {
           store_name,
           provinces ( name )
         ),
-        product_reviews ( rating )
+        product_reviews ( rating ),
+        product_images ( image_url, is_primary ) 
       `
       )
+      // Note: Tambahan 'product_images' di atas 👆
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -45,4 +47,4 @@ export const GET = withAuth(async () => {
       { status: 500 }
     );
   }
-}, ["admin"]);
+}, ["seller"]);
