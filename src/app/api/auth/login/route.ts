@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Missing email or password." },
+        { error: "Email dan password wajib diisi." },
         { status: 400 }
       );
     }
@@ -22,11 +22,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const data = await RetrieveDataByField("users", { email });
+    const data = await RetrieveDataByField("sellers", { 
+        pic_email: email, 
+        status: "active" 
+    });
 
-    if (data.error || data.data.length === 0) {
+    console.log("User retrieval result:", data);
+
+    if (data.error || !data.data || data.data.length === 0) {
       return NextResponse.json(
-        { error: "Invalid email or password." },
+        { error: "Email atau password salah, atau akun belum aktif." },
         { status: 401 }
       );
     }
@@ -34,19 +39,25 @@ export async function POST(request: Request) {
     const user = data.data[0];
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Invalid email or password." },
+        { error: "Email atau password salah." },
         { status: 401 }
       );
     }
 
     const expiresIn = rememberMe ? "3d" : "6h";
-
     const cookieAge = rememberMe ? 3 * 24 * 3600 : 3600;
 
     const tokenPayload = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { 
+        id: user.id,           
+        email: user.pic_email, 
+        name: user.pic_name,   
+        store: user.store_name,
+        role: "seller"         
+      },
       process.env.JWT_SECRET,
       { expiresIn }
     );
@@ -54,7 +65,12 @@ export async function POST(request: Request) {
     const response = NextResponse.json(
       {
         message: "Login successful",
-        user: { id: user.id, email: user.email, role: user.role },
+        user: { 
+            id: user.id, 
+            email: user.pic_email, 
+            name: user.pic_name,
+            role: "seller" 
+        },
       },
       { status: 200 }
     );
@@ -68,9 +84,9 @@ export async function POST(request: Request) {
     });
 
     return response;
+
   } catch (error) {
     console.error("LOGIN ERROR:", error);
-
     return NextResponse.json(
       { error: "Internal server error." },
       { status: 500 }

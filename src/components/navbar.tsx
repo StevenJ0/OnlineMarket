@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, Search, Store, User, LogOut, ShoppingBag } from "lucide-react";
 
 export default function Navbar() {
@@ -12,6 +12,7 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const pathname = usePathname();
+  const router = useRouter();
 
   if (pathname.startsWith("/penjual") || pathname.startsWith("/admin")) {
     return null;
@@ -35,6 +36,31 @@ export default function Navbar() {
   }, []);
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  // --- FUNGSI LOGOUT ---
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        // Reset state lokal
+        setIsLogin(false);
+        setUser(null);
+        setOpenProfileMenu(false);
+        closeMobileMenu();
+
+        // Redirect ke halaman login dengan hard refresh
+        // Menggunakan window.location agar cookie benar-benar bersih di browser
+        window.location.href = "/login";
+      } else {
+        console.error("Gagal logout");
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan saat logout:", error);
+    }
+  };
 
   return (
     <nav className="w-full sticky top-0 z-50 border-b border-slate-800 backdrop-blur-xl bg-slate-950/80">
@@ -74,10 +100,10 @@ export default function Navbar() {
                 Masuk
               </Link>
               <Link
-                href="/register"
+                href="/buka-toko"
                 className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-orange-600 to-orange-500 rounded-xl hover:shadow-lg hover:shadow-orange-600/20 transition-all hover:scale-105 active:scale-95"
               >
-                Daftar
+                Daftar Toko
               </Link>
             </>
           ) : (
@@ -105,9 +131,13 @@ export default function Navbar() {
                     <User size={16} /> Profile
                   </Link>
                   <div className="border-t border-slate-800 mt-1">
-                    <Link href="/logout" className="flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+                    {/* BUTTON LOGOUT (DESKTOP) */}
+                    <button 
+                      onClick={handleLogout} 
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors text-left"
+                    >
                       <LogOut size={16} /> Logout
-                    </Link>
+                    </button>
                   </div>
                 </div>
               )}
@@ -170,9 +200,14 @@ export default function Navbar() {
                 <Link href="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
                   <User size={18} /> Profile Saya
                 </Link>
-                <Link href="/logout" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-900 rounded-xl">
+                
+                {/* BUTTON LOGOUT (MOBILE) */}
+                <button 
+                    onClick={handleLogout} 
+                    className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-900 rounded-xl text-left"
+                >
                   <LogOut size={18} /> Keluar
-                </Link>
+                </button>
               </div>
             )}
           </div>

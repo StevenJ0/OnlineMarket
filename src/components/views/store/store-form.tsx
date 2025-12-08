@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 
 type RegisterStoreViewProps = {
-  userId: string;
 };
 
-export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
-  const [user, setUser] = useState<any>(null);
+export default function RegisterStoreView() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [provinces, setProvinces] = useState<any[]>([]);
@@ -29,19 +27,8 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
     }
   };
 
-  useEffect(() => {
+  useEffect( () => {
     async function init() {
-      try {
-        const res = await fetch("/api/auth/session", {
-          method: "GET",
-          credentials: "include",
-        });
-        const data = await res.json();
-        setUser(data.user);
-      } catch (error) {
-        console.error("Error fetching session:", error);
-      }
-
       const prov = await fetchProvinces();
       setProvinces(prov || []);
     }
@@ -77,7 +64,6 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
 
     try {
       const formData = new FormData(e.currentTarget);
-      formData.append("userId", userId);
 
       const res = await fetch("/api/store", {
         method: "POST",
@@ -160,7 +146,6 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
                   label="Nama PIC"
                   required
                   className="md:col-span-2"
-                  defaultValue={user?.name}
                 />
                 <InputField name="picPhone" label="No HP PIC" required />
                 <InputField
@@ -169,7 +154,6 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
                   type="email"
                   required
                   className="md:col-span-3"
-                  defaultValue={user?.email}
                 />
               </div>
             </section>
@@ -289,8 +273,6 @@ export default function RegisterStoreView({ userId }: RegisterStoreViewProps) {
 }
 
 
-
-// --- COMPONENTS ---
 
 type InputProps = {
   label: string;

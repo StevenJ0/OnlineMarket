@@ -1,6 +1,7 @@
 import { addData, RetrieveDataByField, uploadFile } from "@/lib/supabase/service";
 import { withAuth } from "@/utils/withAuth";
 import { NextResponse } from "next/server";
+import bcrypt from "bcrypt";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -40,9 +41,9 @@ export async function GET(request: Request) {
   );
 }
 
-export const POST = withAuth(async (req: Request, user: any) => {
+export async function POST(request: Request) {
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
 
     const receivedData: Record<string, any> = {};
     const receivedFiles: Record<string, File> = {};
@@ -93,8 +94,9 @@ export const POST = withAuth(async (req: Request, user: any) => {
     console.log("Uploaded file URLs:", { ktpUrl, picUrl });
     console.log("Received data for store registration:", receivedData);
 
+    const passwordHash = bcrypt.hashSync(receivedData.password, 10);
+
     const { data: result, error } = await addData("sellers", {
-      user_id: user.id,
       store_name: receivedData.storeName,
       store_description: receivedData.description,
 
@@ -112,8 +114,11 @@ export const POST = withAuth(async (req: Request, user: any) => {
       pic_ktp_number: receivedData.ktpNumber,
       pic_photo_url: picUrl,
       pic_ktp_photo_url: ktpUrl,
-      status: "pending", // biasanya store baru → pending (boleh hapus)
+      status: "pending", 
+      password : passwordHash,
     });
+
+
 
     if (error) {
       console.error("Error adding data to database:", error);
@@ -124,7 +129,7 @@ export const POST = withAuth(async (req: Request, user: any) => {
     }
 
     return NextResponse.json(
-      { message: "Registrasi store berhasil.", data: result },
+      { message: "Registrasi store berhasil.",  data: result },
       { status: 200 }
     );
 
@@ -136,5 +141,5 @@ export const POST = withAuth(async (req: Request, user: any) => {
       { status: 500 }
     );
   }
-}, ["user"]);
+}
 

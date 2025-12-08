@@ -1,6 +1,6 @@
 // src/app/(dashboard)/penjual/layout.tsx
 import React from "react";
-import { Sidebar } from "@/components/views/sidebar";
+import { Sidebar } from "@/components/views/penjual/sidebar";
 
 export default function PenjualLayout({
   children,

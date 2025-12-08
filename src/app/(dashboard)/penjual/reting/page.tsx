@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Star,
   TrendingUp,
@@ -8,112 +8,34 @@ import {
   MessageCircle,
   ChevronDown,
   MapPin,
-  User,
 } from "lucide-react";
 
-// --- TIPE DATA (Sesuai Tabel DB & Hasil Join) ---
+// --- TIPE DATA ---
 
 type Sentiment = "positive" | "neutral" | "negative";
 
-// Merepresentasikan satu baris di tabel 'product_reviews' + Join Users/Provinces
 type ReviewDB = {
-  id: string; // UUID
-  rating: number; // 1-5
+  id: string;
+  rating: number;
   comment: string;
   created_at: string;
-  
-  // Logika Identitas (Sesuai SRS: Visitor vs Registered)
-  user_name?: string; // Hasil join ke tabel users jika user_id tidak null
-  guest_name?: string; // Dari kolom guest_name
-  guest_province?: string; // Hasil join ke tabel provinces
+  user_name?: string;
+  guest_name?: string;
+  guest_province?: string;
 };
 
-// Merepresentasikan Agregasi Produk untuk Dashboard
 type ProductReviewSummary = {
-  id: string; // UUID product
-  name: string; // products.name
-  imageUrl: string; // product_images.image_url (is_primary)
-  
-  // Field Agregasi (Dihitung dari kumpulan reviews)
+  id: string;
+  name: string;
+  imageUrl: string;
   avgRating: number;
   totalReviews: number;
   reviews: ReviewDB[];
-  
-  // Data Analitik (Simulasi Frontend)
   positivePercent: number;
   neutralPercent: number;
   negativePercent: number;
   trend: "up" | "down" | "flat";
 };
-
-// --- MOCK DATA (Struktur Valid DB) ---
-
-const MOCK_REVIEWS_DATA: ProductReviewSummary[] = [
-  {
-    id: "p1",
-    name: "Kopi Arabica 250gr",
-    imageUrl: "https://images.pexels.com/photos/2968881/pexels-photo-2968881.jpeg?auto=compress&cs=tinysrgb&w=400",
-    avgRating: 4.8,
-    totalReviews: 3,
-    positivePercent: 90,
-    neutralPercent: 7,
-    negativePercent: 3,
-    trend: "up",
-    reviews: [
-      {
-        id: "r1",
-        rating: 5,
-        comment: "Rasanya enak banget, aromanya kuat. Pengiriman ke Surabaya cepat.",
-        created_at: "2 jam lalu",
-        guest_name: "Budi Santoso", // Visitor
-        guest_province: "Jawa Timur" // SRS Requirement
-      },
-      {
-        id: "r2",
-        rating: 5,
-        comment: "Packing rapi, bijinya fresh.",
-        created_at: "Kemarin",
-        user_name: "Dewi Member", // Registered User
-      },
-      {
-        id: "r3",
-        rating: 4,
-        comment: "Overall mantap, cuma sedikit pahit di akhir.",
-        created_at: "3 hari lalu",
-        guest_name: "Andi Wijaya",
-        guest_province: "Jawa Barat"
-      },
-    ],
-  },
-  {
-    id: "p2",
-    name: "Teh Hijau Premium",
-    imageUrl: "https://images.pexels.com/photos/373888/pexels-photo-373888.jpeg?auto=compress&cs=tinysrgb&w=400",
-    avgRating: 4.2,
-    totalReviews: 2,
-    positivePercent: 70,
-    neutralPercent: 20,
-    negativePercent: 10,
-    trend: "flat",
-    reviews: [
-      {
-        id: "r4",
-        rating: 4,
-        comment: "Tehnya wangi dan segar.",
-        created_at: "Kemarin",
-        guest_name: "Sri Aminah",
-        guest_province: "DKI Jakarta"
-      },
-      {
-        id: "r5",
-        rating: 5,
-        comment: "Rasanya lembut, favorit keluarga.",
-        created_at: "4 hari lalu",
-        user_name: "Rahmat Hidayat"
-      },
-    ],
-  },
-];
 
 // ---------- KOMPOSISI UI ----------
 
@@ -159,7 +81,6 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
   const trendLabel =
     product.trend === "up" ? "Rating naik" : product.trend === "down" ? "Rating turun" : "Stabil";
 
-  // State untuk custom scrollbar
   const [thumbTop, setThumbTop] = useState(0);
   const [thumbHeight, setThumbHeight] = useState(100);
 
@@ -184,24 +105,27 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
       className="group flex flex-col gap-3 rounded-xl border border-slate-800 bg-gradient-to-br from-[#020617] via-[#020617] to-[#0b1220] p-4 shadow-md shadow-black/40 transition hover:-translate-y-[1px] hover:border-[#ff7a1a] hover:shadow-[0_0_40px_rgba(248,115,22,0.35)]"
       onMouseLeave={onCollapse}
     >
-      {/* HEADER PRODUK */}
       <button
         type="button"
         onClick={expanded ? onCollapse : onExpand}
         className="flex w-full items-start gap-3 text-left"
       >
         <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="h-full w-full object-cover"
-          />
+          {product.imageUrl ? (
+             <img
+             src={product.imageUrl}
+             alt={product.name}
+             className="h-full w-full object-cover"
+           />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center bg-slate-800 text-slate-500 text-[10px]">No Image</div>
+          )}
+         
         </div>
 
         <div className="flex flex-1 items-start justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-slate-50">{product.name}</h3>
-            {/* SKU DIHAPUS - Tidak ada di DB */}
             
             <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
               <StarRating rating={product.avgRating} />
@@ -228,12 +152,10 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
         </div>
       </button>
 
-      {/* INFO KECIL */}
       {!expanded && (
         <p className="mt-1 text-[11px] text-slate-500">Klik card ini untuk melihat detail komentar pelanggan.</p>
       )}
 
-      {/* LIST REVIEW */}
       {expanded && (
         <div className="mt-1 rounded-lg border border-slate-800/70 bg-[#020617] p-3">
           <div className="mb-2 flex items-center justify-between text-[11px] text-slate-400">
@@ -247,7 +169,6 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
                   <div key={review.id} className="rounded-md border border-slate-800 bg-[#020617] px-2.5 py-2 text-xs">
                     <div className="mb-1 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        {/* Avatar Initials */}
                         <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold text-slate-100 ${review.user_name ? 'bg-blue-600' : 'bg-slate-700'}`}>
                           {(review.user_name || review.guest_name || "A").charAt(0).toUpperCase()}
                         </div>
@@ -256,13 +177,11 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
                             <p className="text-[11px] font-medium text-slate-100">
                               {review.user_name || review.guest_name || "Anonim"}
                             </p>
-                            {/* Tampilkan Badge Provinsi jika Guest (Sesuai SRS) */}
                             {review.guest_province && (
                               <span className="flex items-center gap-0.5 text-[9px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">
                                 <MapPin size={8} /> {review.guest_province}
                               </span>
                             )}
-                            {/* Tampilkan Badge User jika Registered */}
                             {review.user_name && (
                               <span className="text-[9px] bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded">
                                 Member
@@ -284,7 +203,6 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
               </div>
             </div>
 
-            {/* Custom Scrollbar Track */}
             <div className="flex h-52 items-stretch">
               <div className="relative mx-auto h-full w-[4px] rounded-full bg-slate-900/60">
                 <div
@@ -300,17 +218,53 @@ function ReviewCard({ product, expanded, onExpand, onCollapse }: ReviewCardProps
   );
 }
 
-// ---------- PANEL UTAMA ----------
-
 function ProductReviewsPanel() {
+  const [reviewsData, setReviewsData] = useState<ProductReviewSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [ratingFilter, setRatingFilter] = useState<"all" | "good" | "bad">("all");
   const [period, setPeriod] = useState<"7" | "30" | "90">("7");
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [userSession, setUserSession] = useState<any>(null);
+
+  const getAllProductandReviews = async (storeId: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/penjual/product-rating?storeId=${storeId}`, { method: "GET", credentials: "include" });
+      const result = await res.json();
+      if(result.success) {
+        setReviewsData(result.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching product reviews:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session", { method: "GET", credentials: "include" });
+        const data = await res.json();
+        setUserSession(data.user);
+      } catch(err) {
+        console.error("Session error", err);
+      }
+    }
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    if (userSession?.id) {
+      getAllProductandReviews(userSession.id);
+    }
+  }, [userSession?.id]);
 
   const filteredData = useMemo(() => {
-    return MOCK_REVIEWS_DATA.filter((item) => {
-      // Hapus pencarian SKU karena tidak ada di DB
+    // Filter menggunakan data asli dari Database (reviewsData), bukan MOCK
+    return reviewsData.filter((item) => {
       const matchName = item.name.toLowerCase().includes(search.toLowerCase());
       
       let matchRating = true;
@@ -319,7 +273,11 @@ function ProductReviewsPanel() {
 
       return matchName && matchRating;
     });
-  }, [ratingFilter, search]);
+  }, [ratingFilter, search, reviewsData]);
+
+  if (!userSession) {
+      return null; 
+  }
 
   return (
     <section className="h-full w-full rounded-2xl border border-slate-800 bg-[#020617] px-6 py-5 shadow-[0_0_0_1px_rgba(15,23,42,0.8)]">
@@ -384,27 +342,35 @@ function ProductReviewsPanel() {
 
       {/* List Review */}
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        {filteredData.map((product) => (
-          <ReviewCard
-            key={product.id}
-            product={product}
-            expanded={expandedId === product.id}
-            onExpand={() => setExpandedId(product.id)}
-            onCollapse={() => setExpandedId((prev) => (prev === product.id ? null : prev))}
-          />
-        ))}
+        {isLoading ? (
+             // Loading Skeleton Sederhana
+             Array.from({length: 4}).map((_, i) => (
+                <div key={i} className="h-24 rounded-xl border border-slate-800 bg-[#020617] animate-pulse"></div>
+             ))
+        ) : (
+            <>
+                {filteredData.map((product) => (
+                <ReviewCard
+                    key={product.id}
+                    product={product}
+                    expanded={expandedId === product.id}
+                    onExpand={() => setExpandedId(product.id)}
+                    onCollapse={() => setExpandedId((prev) => (prev === product.id ? null : prev))}
+                />
+                ))}
 
-        {filteredData.length === 0 && (
-          <div className="col-span-full rounded-xl border border-slate-800 bg-[#020617] px-4 py-6 text-center text-sm text-slate-400">
-            Tidak ada ulasan produk yang cocok.
-          </div>
+                {filteredData.length === 0 && (
+                <div className="col-span-full rounded-xl border border-slate-800 bg-[#020617] px-4 py-6 text-center text-sm text-slate-400">
+                    Tidak ada ulasan produk yang cocok.
+                </div>
+                )}
+            </>
         )}
       </div>
     </section>
   );
 }
 
-// ---------- DEFAULT EXPORT HALAMAN ----------
 export default function RetingPage() {
   return (
     <>
