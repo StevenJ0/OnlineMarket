@@ -28,6 +28,23 @@ export function Sidebar() {
   const path = usePathname();
   const router = useRouter();
 
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        setUser(null);
+        window.location.href = "/login";
+      } else {
+        console.error("Gagal logout");
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan saat logout:", error);
+    }
+  };
+
   useEffect(() => {
       const fetchSession = async () => {
         try {
@@ -113,9 +130,7 @@ export function Sidebar() {
       <div className="px-4 pb-5 pt-3 border-t border-slate-800/80 bg-[#050815] space-y-3">
         <button
           type="button"
-          onClick={() => {
-            // TODO: isi dengan logika logout (supabase / next-auth / custom)
-          }}
+          onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200
                      hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
         >

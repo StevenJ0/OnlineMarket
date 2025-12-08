@@ -72,7 +72,7 @@ export default function BukaTokoPage() {
       }
 
       alert("Registrasi toko berhasil! Silakan login menggunakan email dan password yang didaftarkan.");
-      router.push("/login-penjual"); // Arahkan ke login penjual
+      router.push("/login"); // Arahkan ke login penjual
 
     } catch (error) {
       console.error(error);

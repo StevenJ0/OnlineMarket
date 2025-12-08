@@ -81,7 +81,7 @@ export type RegionSalesData = {
 // Helper
 export async function getSellerByUserId(userId: string) {
   if (!supabaseAdmin) return { data: null, error: { message: "Server config error" } };
-  const { data, error } = await supabaseAdmin.from("sellers").select("*").eq("user_id", userId).single();
+  const { data, error } = await supabaseAdmin.from("sellers").select("*").eq("id", userId).single();
   return { data, error };
 }
 
