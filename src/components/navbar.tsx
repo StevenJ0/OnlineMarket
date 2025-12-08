@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu, X, Search, Store, User, LogOut, ShoppingBag } from "lucide-react";
 
 export default function Navbar() {
@@ -9,6 +10,12 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/penjual") || pathname.startsWith("/admin")) {
+    return null;
+  }
 
   useEffect(() => {
     async function fetchSession() {
@@ -91,7 +98,7 @@ export default function Navbar() {
                     <p className="text-sm text-white font-semibold truncate">{user?.name}</p>
                     <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                   </div>
-                  <Link href="/store" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                  <Link href="/penjual/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <Store size={16} /> Toko Saya
                   </Link>
                   <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
@@ -157,7 +164,7 @@ export default function Navbar() {
                   <p className="text-sm font-semibold text-white">Halo, {user?.name}</p>
                   <p className="text-xs text-slate-500">{user?.email}</p>
                 </div>
-                <Link href="/store" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
+                <Link href="/penjual/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
                   <Store size={18} /> Toko Saya
                 </Link>
                 <Link href="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
