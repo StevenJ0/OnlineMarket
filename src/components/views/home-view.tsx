@@ -1,14 +1,10 @@
 "use client";
 
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
-import {
-  ShoppingBag,
-  ArrowRight,
-  Star,
-  Tag,
-} from "lucide-react";
+import { ShoppingBag, ArrowRight, Star, Tag } from "lucide-react";
 import { useState, useEffect } from "react";
 
 // Tipe data
@@ -35,7 +31,6 @@ interface Product {
   seller: Seller | null;
   product_reviews: ProductReview[];
 }
-
 
 const formatRupiah = (price: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -87,25 +82,24 @@ export default function HomeView() {
 
   useEffect(() => {
     const fetchData = async () => {
-        setLoading(true);
+      setLoading(true);
 
-        const [catData, productData] = await Promise.all([
+      const [catData, productData] = await Promise.all([
         getAllCategories(),
         getAllProducts(),
-        ]);
+      ]);
 
-        setCategories((catData.data || []).flat());   
-        setProducts(productData || []);
+      setCategories((catData.data || []).flat());
+      setProducts(productData || []);
 
-        setLoading(false);
+      setLoading(false);
     };
 
     fetchData();
-    }, []);
-
+  }, []);
 
   console.log(categories);
-    console.log(products)
+  console.log(products);
   // === RETURN VIEW ===
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200">
@@ -183,7 +177,9 @@ export default function HomeView() {
         ) : products.length === 0 ? (
           <div className="text-center py-20 bg-slate-900/50 rounded-3xl border border-slate-800 border-dashed">
             <ShoppingBag className="mx-auto text-slate-600 mb-4" size={48} />
-            <p className="text-slate-400">Belum ada produk tersedia saat ini.</p>
+            <p className="text-slate-400">
+              Belum ada produk tersedia saat ini.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -243,6 +239,8 @@ export default function HomeView() {
           </div>
         )}
       </section>
+
+      <Footer />
     </main>
   );
 }

@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Search, Store, User, LogOut, ShoppingBag } from "lucide-react";
+import {
+  Menu,
+  X,
+  Search,
+  Store,
+  User,
+  LogOut,
+  ShoppingBag,
+} from "lucide-react";
 
 export default function Navbar() {
   const [isLogin, setIsLogin] = useState(false);
@@ -66,18 +74,18 @@ export default function Navbar() {
     <nav className="w-full sticky top-0 z-50 border-b border-slate-800 backdrop-blur-xl bg-slate-950/80">
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 max-w-7xl mx-auto">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 group" onClick={closeMobileMenu}>
+          <Link
+            href="/"
+            className="flex items-center gap-2 group"
+            onClick={closeMobileMenu}
+          >
             <div className="w-8 h-8 bg-gradient-to-br from-orange-600 to-orange-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform">
               <ShoppingBag size={18} />
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">Tokopaedi</span>
+            <span className="text-xl font-bold text-white tracking-tight">
+              Tokopaedi
+            </span>
           </Link>
-
-          <div className="hidden md:block">
-            <Link href="/buka-toko" className="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
-              Buka Toko
-            </Link>
-          </div>
         </div>
 
         <div className="flex-1 px-8 hidden md:block">
@@ -96,7 +104,10 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {!isLogin ? (
             <>
-              <Link href="/login" className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+              <Link
+                href="/login"
+                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              >
                 Masuk
               </Link>
               <Link
@@ -115,25 +126,37 @@ export default function Navbar() {
                 <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
                   {user?.name?.charAt(0) || "U"}
                 </div>
-                <span className="text-sm font-medium max-w-[100px] truncate">{user?.name || "User"}</span>
+                <span className="text-sm font-medium max-w-[100px] truncate">
+                  {user?.name || "User"}
+                </span>
               </button>
 
               {openProfileMenu && (
                 <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                   <div className="px-4 py-3 border-b border-slate-800">
-                    <p className="text-sm text-white font-semibold truncate">{user?.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                    <p className="text-sm text-white font-semibold truncate">
+                      {user?.name}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {user?.email}
+                    </p>
                   </div>
-                  <Link href="/penjual/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                  <Link
+                    href="/penjual/dashboard"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                  >
                     <Store size={16} /> Toko Saya
                   </Link>
-                  <Link href="/profile" className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                  >
                     <User size={16} /> Profile
                   </Link>
                   <div className="border-t border-slate-800 mt-1">
                     {/* BUTTON LOGOUT (DESKTOP) */}
-                    <button 
-                      onClick={handleLogout} 
+                    <button
+                      onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors text-left"
                     >
                       <LogOut size={16} /> Logout
@@ -159,7 +182,10 @@ export default function Navbar() {
         <div className="md:hidden bg-slate-950 border-b border-slate-800 animate-in slide-in-from-top-5 duration-200 absolute w-full left-0 top-full shadow-2xl">
           <div className="p-4 space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-3 text-slate-500" size={18} />
+              <Search
+                className="absolute left-3 top-3 text-slate-500"
+                size={18}
+              />
               <input
                 type="text"
                 placeholder="Cari produk..."
@@ -181,30 +207,48 @@ export default function Navbar() {
 
             {!isLogin ? (
               <div className="grid grid-cols-2 gap-3">
-                <Link href="/login" onClick={closeMobileMenu} className="flex justify-center py-2.5 border border-slate-700 rounded-xl text-slate-300 font-medium">
+                <Link
+                  href="/login"
+                  onClick={closeMobileMenu}
+                  className="flex justify-center py-2.5 border border-slate-700 rounded-xl text-slate-300 font-medium"
+                >
                   Masuk
                 </Link>
-                <Link href="/register" onClick={closeMobileMenu} className="flex justify-center py-2.5 bg-orange-600 rounded-xl text-white font-bold">
+                <Link
+                  href="/register"
+                  onClick={closeMobileMenu}
+                  className="flex justify-center py-2.5 bg-orange-600 rounded-xl text-white font-bold"
+                >
                   Daftar
                 </Link>
               </div>
             ) : (
               <div className="space-y-1">
                 <div className="px-2 py-2 mb-2">
-                  <p className="text-sm font-semibold text-white">Halo, {user?.name}</p>
+                  <p className="text-sm font-semibold text-white">
+                    Halo, {user?.name}
+                  </p>
                   <p className="text-xs text-slate-500">{user?.email}</p>
                 </div>
-                <Link href="/penjual/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
+                <Link
+                  href="/penjual/dashboard"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
+                >
                   <Store size={18} /> Toko Saya
                 </Link>
-                <Link href="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl">
+                <Link
+                  href="/profile"
+                  onClick={closeMobileMenu}
+                  className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
+                >
                   <User size={18} /> Profile Saya
                 </Link>
-                
+
                 {/* BUTTON LOGOUT (MOBILE) */}
-                <button 
-                    onClick={handleLogout} 
-                    className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-900 rounded-xl text-left"
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-slate-900 rounded-xl text-left"
                 >
                   <LogOut size={18} /> Keluar
                 </button>
