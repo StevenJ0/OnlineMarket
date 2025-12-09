@@ -1,9 +1,14 @@
-//src/app/admin/store/page.tsx
+// src/app/admin/store/page.tsx
 
+import { AdminLayout } from "@/components/views/admin/admin-layout";
 import AdminStoreView from "@/components/views/admin/admin-store-view";
 
 const AdminStorePage = () => {
-  return <AdminStoreView />;
+  return (
+    <AdminLayout>
+      <AdminStoreView />
+    </AdminLayout>
+  );
 };
 
 export default AdminStorePage;
