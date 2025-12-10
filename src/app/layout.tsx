@@ -18,7 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className} suppressHydrationWarning={true}>
+<<<<<<< HEAD
         {/* <Navbar /> */}
+=======
+        <Navbar />  
+>>>>>>> e987ab83014acac397f4fa9b8e32c050a7b738dc
         {children}
       </body>
     </html>
