@@ -322,3 +322,76 @@ export const PUT = withAuth(async (req: Request) => {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }, ["seller", "admin"]);
+
+export const DELETE = withAuth(async (req: Request) => {
+  try {
+    const { searchParams } = new URL(req.url);
+    const productId = searchParams.get("productId");
+    const storeId = searchParams.get("storeId");
+
+    console.log("DELETE /penjual/product dipanggil dengan productId:", productId, "storeId:", storeId);
+
+    if (!productId || !storeId) {
+      return NextResponse.json({ success: false, message: "Missing params" }, { status: 400 });
+    }
+
+    const { data: productCheck, error: checkErr } = await supabase
+      .from("products")
+      .select("id")
+      .eq("id", productId)
+      .eq("seller_id", storeId)
+      .single();
+
+    if (checkErr || !productCheck) {
+      return NextResponse.json({ success: false, message: "Akses ditolak atau produk tidak ditemukan" }, { status: 403 });
+    }
+
+    console.log(`HARD DELETE: Menghapus produk ${productId}`);
+
+    const { data: images } = await supabaseAdmin
+      .from("product_images")
+      .select("image_url")
+      .eq("product_id", productId);
+
+    const deleteDependencies = [
+      supabaseAdmin.from("cart_items").delete().eq("product_id", productId),     
+      supabaseAdmin.from("product_reviews").delete().eq("product_id", productId),
+      supabaseAdmin.from("product_images").delete().eq("product_id", productId),
+      supabaseAdmin.from("order_items").delete().eq("product_id", productId),
+    ];
+
+    await Promise.all(deleteDependencies);
+
+    const { error: deleteProductErr } = await supabaseAdmin
+      .from("products")
+      .delete()
+      .eq("id", productId);
+
+    if (deleteProductErr) {
+      throw new Error("Gagal menghapus produk: " + deleteProductErr.message);
+    }
+
+    if (images && images.length > 0) {
+        const pathsToDelete = images.map((img) => {
+            const url = img.image_url;
+            if (url.includes("/product/")) {
+                return url.split("/product/")[1]; 
+            }
+            return null;
+        }).filter(Boolean); 
+
+        if (pathsToDelete.length > 0) {
+             await supabaseAdmin.storage.from("product").remove(pathsToDelete as string[]);
+        }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Produk berhasil dihapus permanen (Hard Delete).",
+    });
+
+  } catch (error: any) {
+    console.error("Delete Error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}, ["seller", "admin"]);

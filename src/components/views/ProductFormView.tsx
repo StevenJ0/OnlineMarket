@@ -117,7 +117,7 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
     }
     loadCategories();
     fetchSession();
-  }, [initialImages, initialPrimaryIndex, initialValues, mode]);
+  }, []);
 
   console.log("User session:", userSession);
   console.log("Session ID:", sessionId);
@@ -164,7 +164,6 @@ const ProductFormView: React.FC<ProductFormViewProps> = ({
       formData.append("category_id", selectedCategory);
       formData.append("status", status);
 
-      // Append semua images
       images.forEach((file) => formData.append("images", file));
       formData.append("primaryIndex", primaryIndex?.toString() || "0");
 
