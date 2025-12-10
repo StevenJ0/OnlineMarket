@@ -1,12 +1,27 @@
+// src/components/views/auth/login-page.tsx
+
 "use client"
 
 import SecurityIllustration from "./login-illustration"
 import LoginForm from "./login-form"
+import Link from "next/link"
+import { Home } from "lucide-react"
 
 export default function LoginViews() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      {/* Tombol Kembali ke Beranda */}
+      <div className="absolute top-6 left-6">
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-400 transition-all text-sm font-medium"
+        >
+          <Home size={18} />
+          <span>Beranda</span>
+        </Link>
+      </div>
+
       {/* Main Content */}
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
         <div className="w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden border border-cyan-900/50 backdrop-blur-sm flex">

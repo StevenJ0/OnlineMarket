@@ -19,7 +19,7 @@ const DashboardView = () => {
 
   useEffect(() => {
 
-    const fecthSessionAndChecckRole = async () => {
+    const fecthSessionAndCheckRole = async () => {
       try {
         const res = await fetch("/api/auth/session", { credentials: "include" });
         const data = await res.json();
@@ -37,7 +37,7 @@ const DashboardView = () => {
         console.error("Gagal mengambil sesi:", err);
       }
     };
-    fecthSessionAndChecckRole();
+    fecthSessionAndCheckRole();
 
     const fetchData = async () => {
       try {

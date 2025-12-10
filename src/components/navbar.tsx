@@ -1,3 +1,5 @@
+// src/components/navbar.tsx
+
 "use client";
 
 import Link from "next/link";
@@ -11,6 +13,7 @@ import {
   User,
   LogOut,
   ShoppingBag,
+  LayoutDashboard,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -18,6 +21,7 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -36,6 +40,10 @@ export default function Navbar() {
         const data = await res.json();
         setIsLogin(data.loggedIn);
         setUser(data.user);
+        
+        // ← CEK APAKAH ADMIN
+        const adminEmail = "stevenjonathanalfredo785@gmail.com";
+        setIsAdmin(data.loggedIn && data.user?.email === adminEmail);
       } catch (error) {
         console.error("Gagal mengambil sesi:", error);
       }
@@ -56,11 +64,11 @@ export default function Navbar() {
         // Reset state lokal
         setIsLogin(false);
         setUser(null);
+        setIsAdmin(false);
         setOpenProfileMenu(false);
         closeMobileMenu();
 
         // Redirect ke halaman login dengan hard refresh
-        // Menggunakan window.location agar cookie benar-benar bersih di browser
         window.location.href = "/login";
       } else {
         console.error("Gagal logout");
@@ -123,7 +131,13 @@ export default function Navbar() {
                 onClick={() => setOpenProfileMenu((prev) => !prev)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-600 text-white rounded-xl transition-all"
               >
-                <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                    isAdmin
+                      ? "bg-red-500"
+                      : "bg-indigo-600"
+                  }`}
+                >
                   {user?.name?.charAt(0) || "U"}
                 </div>
                 <span className="text-sm font-medium max-w-[100px] truncate">
@@ -140,19 +154,40 @@ export default function Navbar() {
                     <p className="text-xs text-slate-500 truncate">
                       {user?.email}
                     </p>
+                    {isAdmin && (
+                      <p className="text-xs text-red-400 font-semibold mt-1">
+                        👑 Admin
+                      </p>
+                    )}
                   </div>
-                  <Link
-                    href="/penjual/dashboard"
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                  >
-                    <Store size={16} /> Toko Saya
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                  >
-                    <User size={16} /> Profile
-                  </Link>
+
+                  {/* ← MENU BERBEDA BERDASARKAN ROLE */}
+                  {isAdmin ? (
+                    // MENU ADMIN
+                    <>
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        <LayoutDashboard size={16} /> Admin Dashboard
+                      </Link>
+                      <Link
+                        href="/penjual/dashboard"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      >
+                        <Store size={16} /> Toko Saya
+                      </Link>
+                    </>
+                  ) : (
+                    // MENU SELLER BIASA
+                    <Link
+                      href="/penjual/dashboard"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                    >
+                      <Store size={16} /> Toko Saya
+                    </Link>
+                  )}
+
                   <div className="border-t border-slate-800 mt-1">
                     {/* BUTTON LOGOUT (DESKTOP) */}
                     <button
@@ -229,21 +264,42 @@ export default function Navbar() {
                     Halo, {user?.name}
                   </p>
                   <p className="text-xs text-slate-500">{user?.email}</p>
+                  {isAdmin && (
+                    <p className="text-xs text-red-400 font-semibold mt-1">
+                      👑 Admin
+                    </p>
+                  )}
                 </div>
-                <Link
-                  href="/penjual/dashboard"
-                  onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
-                >
-                  <Store size={18} /> Toko Saya
-                </Link>
-                <Link
-                  href="/profile"
-                  onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
-                >
-                  <User size={18} /> Profile Saya
-                </Link>
+
+                {/* ← MENU MOBILE BERBEDA BERDASARKAN ROLE */}
+                {isAdmin ? (
+                  // MENU ADMIN MOBILE
+                  <>
+                    <Link
+                      href="/admin"
+                      onClick={closeMobileMenu}
+                      className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
+                    >
+                      <LayoutDashboard size={18} /> Admin Dashboard
+                    </Link>
+                    <Link
+                      href="/penjual/dashboard"
+                      onClick={closeMobileMenu}
+                      className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
+                    >
+                      <Store size={18} /> Toko Saya
+                    </Link>
+                  </>
+                ) : (
+                  // MENU SELLER MOBILE
+                  <Link
+                    href="/penjual/dashboard"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-900 rounded-xl"
+                  >
+                    <Store size={18} /> Toko Saya
+                  </Link>
+                )}
 
                 {/* BUTTON LOGOUT (MOBILE) */}
                 <button

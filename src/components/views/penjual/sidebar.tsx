@@ -1,9 +1,12 @@
+// src/components/views/penjual/sidebar.tsx
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Home, LogOut } from "lucide-react";
 
 type MenuItem = {
   name: string;
@@ -16,8 +19,6 @@ const menu: MenuItem[] = [
   { name: "Laporan", href: "/penjual/report" },
   { name: "View Rating", href: "/penjual/reting" },
 ];
-
-
 
 export function Sidebar() {
   const [user, setUser] = useState<any>(null);
@@ -46,39 +47,39 @@ export function Sidebar() {
   };
 
   useEffect(() => {
-      const fetchSession = async () => {
-        try {
-          const res = await fetch("/api/auth/session", {
-            method: "GET",
-            credentials: "include",
-          });
+    const fetchSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session", {
+          method: "GET",
+          credentials: "include",
+        });
 
-          if (!res.ok) {
-            throw new Error("Network response was not ok");
-          }
-
-          const data = await res.json();
-          setUser(data.user);
-        } catch (error) {
-          console.error("Gagal mengambil sesi:", error);
-        } finally {
-          setLoading(false);
+        if (!res.ok) {
+          throw new Error("Network response was not ok");
         }
-      };
 
-      fetchSession();
-    }, []);
-
-    useEffect(() => {
-      if (!loading && user === null || user === undefined) {
-        router.push("/login");
+        const data = await res.json();
+        setUser(data.user);
+      } catch (error) {
+        console.error("Gagal mengambil sesi:", error);
+      } finally {
+        setLoading(false);
       }
-    }, [loading, user, router]);
+    };
 
-    if (loading) return null;
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
+    if (!loading && (user === null || user === undefined)) {
+      router.push("/login");
+    }
+  }, [loading, user, router]);
+
+  if (loading) return null;
 
   return (
-    <aside className="w-72 min-h-screen bg-[#050815] border-r border-slate-800/80 flex flex-col justify-between shadow-xl">
+    <aside className="w-72 min-h-screen bg-[#050815] border-r border-slate-800/80 flex flex-col justify-between shadow-xl sticky top-0">
       {/* TOP: Profil + Menu */}
       <div>
         {/* Header profile */}
@@ -88,14 +89,29 @@ export function Sidebar() {
               {user && user.email ? user.email.charAt(0).toUpperCase() : "U"}
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-50 ">Dashboard Penjual</p>
-              <p className="text-xs text-slate-400">{user && user.email ? user.email : "User"}</p>
+              <p className="text-sm font-semibold text-slate-50">
+                Dashboard Penjual
+              </p>
+              <p className="text-xs text-slate-400">
+                {user && user.email ? user.email : "User"}
+              </p>
             </div>
           </div>
         </div>
 
+        {/* Tombol Kembali ke Beranda */}
+        <div className="px-3 pt-4 pb-3">
+          <Link
+            href="/"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-400 transition-all text-sm font-medium"
+          >
+            <Home size={18} />
+            <span>Kembali ke Beranda</span>
+          </Link>
+        </div>
+
         {/* Menu */}
-        <nav className="px-3 pt-4 pb-4 text-sm space-y-1">
+        <nav className="px-3 pb-4 text-sm space-y-1">
           <p className="px-3 mb-2 text-[11px] uppercase tracking-[0.12em] text-slate-500">
             Menu Utama
           </p>
@@ -131,10 +147,9 @@ export function Sidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200
-                     hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
         >
-          <span className="text-xs">⏻</span>
+          <LogOut size={16} />
           <span>Logout</span>
         </button>
 

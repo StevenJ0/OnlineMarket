@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Store, ShoppingBag, LayoutDashboard, LogOut } from "lucide-react";
+import { Store, ShoppingBag, LayoutDashboard, LogOut, Home } from "lucide-react";
 
 type MenuItem = {
   name: string;
@@ -92,8 +92,19 @@ export function AdminSidebar() {
           </div>
         </div>
 
+        {/* Tombol Kembali ke Beranda */}
+        <div className="px-3 pt-4 pb-3">
+          <Link
+            href="/"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-all text-sm font-medium"
+          >
+            <Home size={18} />
+            <span>Kembali ke Beranda</span>
+          </Link>
+        </div>
+
         {/* Menu */}
-        <nav className="px-3 pt-4 pb-4 text-sm space-y-1">
+        <nav className="px-3 pb-4 text-sm space-y-1">
           <p className="px-3 mb-2 text-[11px] uppercase tracking-[0.12em] text-slate-500">
             Menu Admin
           </p>
@@ -131,8 +142,7 @@ export function AdminSidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200
-                     hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:border-red-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
         >
           <LogOut size={16} />
           <span>Logout</span>
