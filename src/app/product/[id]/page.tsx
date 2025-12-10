@@ -194,7 +194,6 @@ export default async function ProductDetailPage(props: Props) {
                     <h3 className="font-bold text-white truncate text-base">{product.storeName}</h3>
                     <div className="flex items-center text-xs text-slate-400 mt-1">
                         <MapPin size={12} className="mr-1 text-orange-500" />
-                        {/* Lokasi Toko yang sudah diambil dari relasi cities & provinces */}
                         <span className="truncate">{product.storeLocation}</span>
                     </div>
                   </div>
