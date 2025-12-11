@@ -100,18 +100,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="flex-1 px-8 hidden md:block">
-          <div className="w-full max-w-xl mx-auto relative group">
-            <div className="absolute left-3 top-2.5 text-slate-500 group-focus-within:text-orange-500 transition-colors">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="Cari Produk di Tokopaedi..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/50 text-slate-200 border border-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all text-sm"
-            />
-          </div>
-        </div>
+        
 
         <div className="hidden md:flex items-center gap-3">
           {!isLogin ? (
