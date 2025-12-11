@@ -161,6 +161,8 @@ export default function HomeView() {
         </div>
       </section>
 
+
+
       {/* PRODUK TERBARU */}
       <section className="py-20 max-w-7xl mx-auto px-4">
         <div className="flex items-end justify-between mb-10">

@@ -1,7 +1,7 @@
 // src/components/modals/admin/store/EditStatusModal.tsx
 
 "use client";
-
+import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { X, AlertCircle, CheckCircle } from "lucide-react";
 

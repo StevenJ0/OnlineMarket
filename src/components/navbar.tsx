@@ -30,6 +30,10 @@ export default function Navbar() {
     return null;
   }
 
+  if (pathname.startsWith("/penjual") || pathname.startsWith("/admin")) {
+    return null;  
+  }
+
   useEffect(() => {
     async function fetchSession() {
       try {

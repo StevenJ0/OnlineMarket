@@ -118,9 +118,20 @@ export default function ProductPage() {
   const handleEdit = (product: ProductRow) =>
     router.push(`/penjual/product/edit/${product.id}`);
 
-  const handleDelete = (product: ProductRow) => {
-    if (confirm(`Hapus produk "${product.name}"?`)) {
-      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+  const handleDelete = async (product: ProductRow) => {
+    console.log("Delete product:", product);
+    try {
+      const rest = await fetch(`/api/penjual/product?productId=${product.id}&storeId=${userSession.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await rest.json();
+      if (data.success) {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      }
+      
+    } catch (error) {
+      console.log("Error deleting product:", error);
     }
   };
 
@@ -283,7 +294,7 @@ export default function ProductPage() {
               >
                 <Download className="w-3.5 h-3.5 text-green-400" />
                 <div>
-                  <span className="block font-semibold">Laporan Stok (SRS-12)</span>
+                  <span className="block font-semibold">Laporan Stok</span>
                   <span className="text-slate-500 text-[10px]">
                     Urut stok terbanyak & rating
                   </span>
@@ -296,7 +307,7 @@ export default function ProductPage() {
               >
                 <Star className="w-3.5 h-3.5 text-yellow-400" />
                 <div>
-                  <span className="block font-semibold">Laporan Rating (SRS-13)</span>
+                  <span className="block font-semibold">Laporan Rating</span>
                   <span className="text-slate-500 text-[10px]">
                     Urut rating tertinggi
                   </span>
@@ -309,7 +320,7 @@ export default function ProductPage() {
               >
                 <Download className="w-3.5 h-3.5 text-red-400" />
                 <div>
-                  <span className="block font-semibold">Laporan Restock (SRS-14)</span>
+                  <span className="block font-semibold">Laporan Restock</span>
                   <span className="text-slate-500 text-[10px]">
                     Stok kritis {"(< 2)"}
                   </span>
