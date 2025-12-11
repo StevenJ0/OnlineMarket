@@ -46,6 +46,8 @@ export default function EditStatusModal({
     setErrorMessage("");
     setSuccessMessage("");
 
+    console.log("jalan")
+
     if (!storeId) {
       setErrorMessage("Store ID tidak valid.");
       return;
