@@ -5,14 +5,15 @@ import EditStatusModal from "@/components/modals/admin/store/EditStatusModal";
 import {
   Download,
   Search,
-  Eye,
-  Edit,
   Loader2,
   MapPin,
   Phone,
   Mail,
   User,
   Filter,
+  FileText,
+  Map,
+  Edit,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -52,7 +53,6 @@ const AdminStoreView = () => {
   };
 
   useEffect(() => {
-
     const fecthSessionAndChecckRole = async () => {
       try {
         const res = await fetch("/api/auth/session", { credentials: "include" });
@@ -60,19 +60,14 @@ const AdminStoreView = () => {
         if (!data.loggedIn) {
           window.location.href = "/login";
         }
-
-        console.log(data.user.email); 
-
-        if (data.user.email != "stevenjonathanalfredo785@gmail.com"){
+        if (data.user.email !== "stevenjonathanalfredo785@gmail.com") {
           window.location.href = "/";
         }
-        console.log("Session data:", data);
       } catch (err) {
         console.error("Gagal mengambil sesi:", err);
       }
     };
     fecthSessionAndChecckRole();
-
     getAllStore();
   }, []);
 
@@ -80,7 +75,6 @@ const AdminStoreView = () => {
     const provinces = listStore
       .map((store) => store.provinces?.name)
       .filter((name) => name);
-
     return Array.from(new Set(provinces)).sort();
   }, [listStore]);
 
@@ -96,62 +90,93 @@ const AdminStoreView = () => {
     return matchesSearch && matchesProvince;
   });
 
-  const handleDownloadPDF = () => {
+  // --- PDF GENERATOR SRS-09 (Berdasarkan Status) ---
+  const handleDownloadSRS09 = () => {
     const doc = new jsPDF();
 
-    const titleSuffix =
-      provinceFilter !== "all"
-        ? `WILAYAH: ${provinceFilter.toUpperCase()}`
-        : "SEMUA WILAYAH";
+    // 1. Sort: Aktif dulu, baru Tidak Aktif/Pending
+    const sortedData = [...filteredStores].sort((a, b) => {
+      if (a.status === 'active' && b.status !== 'active') return -1;
+      if (a.status !== 'active' && b.status === 'active') return 1;
+      return 0;
+    });
 
-    doc.setFontSize(16);
-    doc.text("LAPORAN DAFTAR AKUN PENJUAL", 14, 20);
-    doc.setFontSize(12);
-    doc.text(titleSuffix, 14, 28);
-
+    // Header sesuai DOCX
+    doc.setFontSize(14);
+    doc.text("Laporan Daftar Akun Penjual Berdasarkan Status", 14, 20);
     doc.setFontSize(10);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString("id-ID")}`, 14, 35);
+    doc.text(`Tanggal dibuat: ${new Date().toLocaleDateString("id-ID")} oleh Administrator`, 14, 26);
 
-    const tableColumn = [
-      "No",
-      "Nama Toko",
-      "PIC",
-      "Lokasi",
-      "Status",
-      "Tanggal Daftar",
-    ];
+    const tableColumn = ["No", "Nama User", "Nama PIC", "Nama Toko", "Status"];
     const tableRows: any[] = [];
 
-    filteredStores.forEach((store, index) => {
-      const city = store.cities?.name || "-";
-      const province = store.provinces?.name || "-";
-      const locationStr = `${city}, ${province}`;
+    sortedData.forEach((store, index) => {
+      // Mapping status ke Bahasa Indonesia "Aktif" / "Tidak Aktif"
+      let statusIndo = "Tidak Aktif";
+      if (store.status === 'active') statusIndo = "Aktif";
+      else if (store.status === 'pending') statusIndo = "Pending";
+      else if (store.status === 'awaiting_activation') statusIndo = "Menunggu Aktivasi";
 
-      const storeData = [
+      const rowData = [
         index + 1,
-        store.store_name,
-        store.pic_name,
-        locationStr,
-        store.status.toUpperCase(),
-        new Date(store.created_at).toLocaleDateString("id-ID"),
+        store.pic_email || "-", // Nama User (Asumsi pakai email karena tidak ada field username)
+        store.pic_name || "-",
+        store.store_name || "-",
+        statusIndo,
       ];
-      tableRows.push(storeData);
+      tableRows.push(rowData);
     });
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 45,
-      styles: { fontSize: 8 },
+      startY: 35,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [249, 115, 22] }, // Orange theme
+    });
+
+    doc.save("Laporan_Penjual_Status_SRS09.pdf");
+  };
+
+  // --- PDF GENERATOR SRS-10 (Berdasarkan Propinsi) ---
+  const handleDownloadSRS10 = () => {
+    const doc = new jsPDF();
+
+    // 1. Sort: Berdasarkan Nama Propinsi
+    const sortedData = [...filteredStores].sort((a, b) => {
+      const provA = a.provinces?.name || "";
+      const provB = b.provinces?.name || "";
+      return provA.localeCompare(provB);
+    });
+
+    // Header sesuai DOCX
+    doc.setFontSize(14);
+    doc.text("Laporan Daftar Toko Berdasarkan Lokasi Propinsi", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Tanggal dibuat: ${new Date().toLocaleDateString("id-ID")} oleh Administrator`, 14, 26);
+
+    const tableColumn = ["No", "Nama Toko", "Nama PIC", "Propinsi"];
+    const tableRows: any[] = [];
+
+    sortedData.forEach((store, index) => {
+      const rowData = [
+        index + 1,
+        store.store_name || "-",
+        store.pic_name || "-",
+        store.provinces?.name || "Tidak Diketahui",
+      ];
+      tableRows.push(rowData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      styles: { fontSize: 9 },
       headStyles: { fillColor: [249, 115, 22] },
     });
 
-    const fileName =
-      provinceFilter !== "all"
-        ? `Laporan_Penjual_${provinceFilter.replace(/\s/g, "_")}.pdf`
-        : "Laporan_Penjual_Semua.pdf";
-
-    doc.save(fileName);
+    doc.save("Laporan_Toko_Propinsi_SRS10.pdf");
   };
 
   return (
@@ -179,7 +204,7 @@ const AdminStoreView = () => {
       )}
 
       {/* --- Header Section --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
             Manajemen Toko
@@ -189,13 +214,24 @@ const AdminStoreView = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleDownloadPDF}
-          className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition-all text-sm font-medium hover:border-orange-500/50"
-        >
-          <Download size={18} />
-          <span>Download Laporan PDF</span>
-        </button>
+        {/* Action Buttons: SRS 9 & SRS 10 */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleDownloadSRS09}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition-all text-xs font-medium hover:border-orange-500/50"
+          >
+            <FileText size={16} className="text-orange-500" />
+            <span>Laporan Status (SRS-09)</span>
+          </button>
+          
+          <button
+            onClick={handleDownloadSRS10}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition-all text-xs font-medium hover:border-blue-500/50"
+          >
+            <Map size={16} className="text-blue-500" />
+            <span>Laporan Lokasi (SRS-10)</span>
+          </button>
+        </div>
       </div>
 
       {/* --- Filter & Search Bar --- */}

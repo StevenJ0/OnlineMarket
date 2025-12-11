@@ -48,6 +48,7 @@ const AdminProductsView = () => {
           avgRating: calculateRating(item.product_reviews),
         }));
 
+        // Sort Default: Rating Tertinggi (Sesuai SRS-11)
         const sortedData = processedData.sort(
           (a: any, b: any) => b.avgRating - a.avgRating
         );
@@ -72,14 +73,9 @@ const AdminProductsView = () => {
           window.location.href = "/login";
           return;
         }
-
-        console.log(data.user.email);
-
-        // Security Note: Idealnya validasi role dilakukan di Middleware / Server Side juga
         if (data.user.email !== "stevenjonathanalfredo785@gmail.com") {
           window.location.href = "/";
         }
-        console.log("Session data:", data);
       } catch (err) {
         console.error("Gagal mengambil sesi:", err);
       }
@@ -98,37 +94,41 @@ const AdminProductsView = () => {
       item.categories?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // --- PDF Generation ---
+  // --- PDF Generation (SRS-11) ---
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
 
-    doc.setFontSize(16);
-    doc.text("LAPORAN DAFTAR PRODUK & RATING", 14, 20);
+    // 1. Header Format Laporan (SRS-11)
+    doc.setFontSize(14);
+    doc.text("Laporan Daftar Produk Berdasarkan Rating", 14, 20);
+    
     doc.setFontSize(10);
-    doc.text("Diurutkan berdasarkan Rating (Tertinggi ke Terendah)", 14, 26);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString("id-ID")}`, 14, 32);
+    doc.text(`Tanggal dibuat: ${new Date().toLocaleDateString("id-ID")} oleh Administrator`, 14, 26);
 
+    // 2. Kolom Tabel Sesuai DOCX
     const tableColumn = [
       "No",
-      "Nama Produk",
+      "Produk",
       "Kategori",
-      "Toko",
-      "Provinsi",
       "Harga",
       "Rating",
+      "Nama Toko",
+      "Propinsi",
     ];
+    
     const tableRows: any[] = [];
 
+    // 3. Populate Data
     filteredProducts.forEach((item: any, index: number) => {
       const rowData = [
         index + 1,
         item.name,
         item.categories?.name || "-",
+        formatRupiah(item.price),
+        item.avgRating > 0 ? `${item.avgRating}` : "0",
         item.sellers?.store_name || "-",
         item.sellers?.provinces?.name || "-",
-        formatRupiah(item.price),
-        item.avgRating > 0 ? `${item.avgRating} / 5` : "Belum ada rating",
       ];
       tableRows.push(rowData);
     });
@@ -136,15 +136,15 @@ const AdminProductsView = () => {
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 40,
+      startY: 35,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [249, 115, 22] }, // Orange color
       columnStyles: {
-        6: { fontStyle: "bold", halign: "center" },
+        4: { halign: "center" }, // Center rating column
       },
     });
 
-    doc.save("Laporan_Produk_Rating.pdf");
+    doc.save("Laporan_Produk_Rating_SRS11.pdf");
   };
 
   // --- Render ---
@@ -167,7 +167,7 @@ const AdminProductsView = () => {
           className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition-all text-sm font-medium hover:border-orange-500/50"
         >
           <Download size={18} />
-          <span>Download Laporan PDF</span>
+          <span>Download Laporan PDF (SRS-11)</span>
         </button>
       </div>
 
@@ -213,7 +213,6 @@ const AdminProductsView = () => {
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {filteredProducts.map((item) => {
-                  // LOGIC IMAGE: Cari yg primary, kalau tidak ada ambil index 0
                   const displayImage =
                     item.product_images?.find((img: any) => img.is_primary)
                       ?.image_url || item.product_images?.[0]?.image_url;
@@ -226,7 +225,6 @@ const AdminProductsView = () => {
                       {/* Produk Column */}
                       <td className="p-4 pl-6">
                         <div className="flex items-center gap-4">
-                          {/* Image Wrapper */}
                           <div className="w-16 h-16 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-700 shadow-sm relative group-hover:border-slate-600 transition-colors">
                             {displayImage ? (
                               <img
@@ -241,8 +239,6 @@ const AdminProductsView = () => {
                               />
                             )}
                           </div>
-
-                          {/* Product Info */}
                           <div className="flex flex-col gap-1">
                             <p className="font-bold text-white line-clamp-2 leading-tight w-48 group-hover:text-orange-400 transition-colors">
                               {item.name}
@@ -253,15 +249,11 @@ const AdminProductsView = () => {
                           </div>
                         </div>
                       </td>
-
-                      {/* Kategori */}
                       <td className="p-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap">
                           {item.categories?.name || "Uncategorized"}
                         </span>
                       </td>
-
-                      {/* Toko & Lokasi */}
                       <td className="p-4">
                         <div className="flex flex-col">
                           <div className="flex items-center gap-1.5 text-white font-medium text-xs mb-0.5">
@@ -274,13 +266,9 @@ const AdminProductsView = () => {
                           </p>
                         </div>
                       </td>
-
-                      {/* Harga */}
                       <td className="p-4 font-mono text-slate-300">
                         {formatRupiah(item.price)}
                       </td>
-
-                      {/* Rating */}
                       <td className="p-4 text-center">
                         <div className="flex flex-col items-center justify-center">
                           <div className="flex items-center gap-1">
