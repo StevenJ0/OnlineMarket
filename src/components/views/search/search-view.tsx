@@ -14,6 +14,7 @@ export default function SearchView({ query }: { query: string }) {
 
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState(query || "");
+  const [debouncedInput, setDebouncedInput] = useState(query || "");
 
   // FILTER STATE
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -21,6 +22,17 @@ export default function SearchView({ query }: { query: string }) {
 
   const [filterProvince, setFilterProvince] = useState<string | null>(null);
   const [filterCity, setFilterCity] = useState<string | null>(null);
+
+  // DEBOUNCING EFFECT
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedInput(input);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [input]);
 
   const getResult = async (keyword: string, isProductTab: boolean) => {
     try {
@@ -36,9 +48,9 @@ export default function SearchView({ query }: { query: string }) {
     }
   };
 
-  // FETCH DATA
+  // FETCH DATA (using debouncedInput instead of input)
   useEffect(() => {
-    if (!input.trim()) {
+    if (!debouncedInput.trim()) {
       setRawData([]);
       return;
     }
@@ -46,7 +58,7 @@ export default function SearchView({ query }: { query: string }) {
     let mounted = true;
     const loadData = async () => {
       setLoading(true);
-      const result = await getResult(input, isProduk);
+      const result = await getResult(debouncedInput, isProduk);
       if (!mounted) return;
       setRawData(result);
       setLoading(false);
@@ -56,7 +68,7 @@ export default function SearchView({ query }: { query: string }) {
     return () => {
       mounted = false;
     };
-  }, [input, isProduk]);
+  }, [debouncedInput, isProduk]);
 
   // APPLY FILTER
   useEffect(() => {
