@@ -136,12 +136,6 @@ export default function HomeView() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-white">Kategori Pilihan</h2>
-            <Link
-              href="/categories"
-              className="text-orange-400 hover:text-orange-300 flex items-center gap-1"
-            >
-              Lihat Semua <ArrowRight size={16} />
-            </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
