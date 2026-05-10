@@ -1,8 +1,12 @@
+// src/components/views/search/search-view.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Home, ArrowLeft } from "lucide-react";
 
+import Navbar from "@/components/navbar";
 import FilterSidebarProduk from "@/components/FilterSidebarProduk";
 import FilterSidebarToko from "@/components/FilterSidebarToko";
 
@@ -123,13 +127,26 @@ export default function SearchView({ query }: { query: string }) {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200">
+      {/* ← NAVBAR */}
+      <Navbar />
+
+      {/* ← BACK TO HOME BUTTON */}
+      <div className="fixed top-20 left-6 z-40">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:border-orange-500/50 hover:bg-orange-500/10 hover:text-orange-400 transition-all text-sm font-medium"
+        >
+          <ArrowLeft size={18} />
+          <span>Beranda</span>
+        </Link>
+      </div>
+
       <div className="flex gap-6 max-w-7xl mx-auto pt-20 px-4">
 
         {/* SIDEBAR */}
         <div className="hidden lg:block">
           {isProduk ? (
             <FilterSidebarProduk
-              // you can keep these props or remove them since FilterSidebarProduk fetches its own data
               categories={[{ id: "1", name: "Laptop" }, { id: "2", name: "Keyboard" }]}
               locations={["Jakarta", "Bandung", "Surabaya"]}
               filterCategory={filterCategory}
