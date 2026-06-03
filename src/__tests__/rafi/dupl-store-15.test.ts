@@ -1,4 +1,5 @@
 // DUPL-STORE-15
+// Uji validasi field wajib registrasi toko: tanpa dokumen wajib harus ditolak (400).
 
 import { POST } from "@/app/api/store/route";
 

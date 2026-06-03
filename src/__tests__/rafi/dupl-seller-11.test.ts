@@ -1,4 +1,5 @@
-// DUPL-SELLER-11 
+// DUPL-SELLER-11
+// Uji validasi input stok: hanya menerima angka bilangan bulat dan minimal 0.
 
 type StockValidationResult = { valid: boolean; error: string | null };
 
