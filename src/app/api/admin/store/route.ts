@@ -137,6 +137,7 @@ export const PUT = withAuth(async (request: Request) => {
     // 🔥 2. rejected → kirim email penolakan
     // ===================================================
     if (status === "rejected") {
+      console.log("Mengirim email penolakan ke:", currentStore.pic_email);
       await sendEmail(
         currentStore.pic_email,
         "Pendaftaran Seller Ditolak",

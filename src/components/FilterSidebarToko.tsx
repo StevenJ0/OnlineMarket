@@ -19,57 +19,57 @@ export default function FilterSidebarToko({
   onProvinceChange,
   onCityChange,
 }: any) {
-
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [filteredCities, setFilteredCities] = useState<City[]>([]);
 
-  // Fetch Provinces
   const getAllProvinces = async () => {
     try {
       const res = await fetch("/api/provinces");
-      const data = await res.json();
-      setProvinces(data.data || []);
+      const result = await res.json();
+      setProvinces(result.data || []);
     } catch (error) {
       console.error("Error provinces:", error);
     }
   };
+  
 
-  // Fetch Cities
   const getAllCities = async () => {
     try {
       const res = await fetch("/api/cities");
-      const data = await res.json();
-      setCities(data.data || []);
+      const result = await res.json();
+      
+      console.log("Cities fetched:", result.data); 
+      setCities(result.data || []);
+      
     } catch (error) {
       console.error("Error cities:", error);
     }
   };
 
-  // Load data on mount
   useEffect(() => {
     getAllProvinces();
     getAllCities();
   }, []);
 
-  // Auto filter cities when province changes
   useEffect(() => {
     if (!filterProvince) {
-      setFilteredCities(cities);
+      setFilteredCities([]); // Saya set kosong biar rapi, user harus pilih provinsi dulu
       return;
     }
 
-    const prov = provinces.find((p) => p.name === filterProvince);
+    const selectedProv = provinces.find((p) => p.name === filterProvince);
 
-    if (prov) {
-      setFilteredCities(cities.filter((c) => c.province_id === prov.id));
+    if (selectedProv) {
+      const filtered = cities.filter((c) => c.province_id === selectedProv.id);
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities([]);
     }
   }, [filterProvince, cities, provinces]);
 
-
   return (
     <aside className="w-full lg:w-64 flex-shrink-0 space-y-8">
-
       {/* ===================== */}
       {/* PROVINSI */}
       {/* ===================== */}
@@ -81,18 +81,16 @@ export default function FilterSidebarToko({
         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
           {provinces.map((prov) => (
             <label key={prov.id} className="flex items-center gap-3 cursor-pointer group">
-              
               <input
                 type="checkbox"
                 className="hidden"
                 checked={filterProvince === prov.name}
-                onChange={() =>
-                  onProvinceChange(
-                    filterProvince === prov.name ? null : prov.name
-                  )
-                }
+                onChange={() => {
+                  // Reset kota jika provinsi diganti
+                  onCityChange(null);
+                  onProvinceChange(filterProvince === prov.name ? null : prov.name);
+                }}
               />
-
               <div
                 className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
                   filterProvince === prov.name
@@ -104,7 +102,6 @@ export default function FilterSidebarToko({
                   <div className="w-2 h-2 bg-white" />
                 )}
               </div>
-
               <span
                 className={`text-sm ${
                   filterProvince === prov.name
@@ -114,7 +111,6 @@ export default function FilterSidebarToko({
               >
                 {prov.name}
               </span>
-
             </label>
           ))}
         </div>
@@ -128,10 +124,14 @@ export default function FilterSidebarToko({
           Kota
         </h3>
 
+        {/* Helper text jika provinsi belum dipilih */}
+        {!filterProvince && (
+           <p className="text-xs text-slate-500 italic">Pilih provinsi terlebih dahulu</p>
+        )}
+
         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
           {filteredCities.map((city) => (
             <label key={city.id} className="flex items-center gap-3 cursor-pointer group">
-              
               <input
                 type="checkbox"
                 className="hidden"
@@ -140,7 +140,6 @@ export default function FilterSidebarToko({
                   onCityChange(filterCity === city.name ? null : city.name)
                 }
               />
-
               <div
                 className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                   filterCity === city.name
@@ -152,7 +151,6 @@ export default function FilterSidebarToko({
                   <div className="w-2 h-2 bg-orange-500 rounded-full" />
                 )}
               </div>
-
               <span
                 className={`text-sm ${
                   filterCity === city.name
@@ -162,12 +160,10 @@ export default function FilterSidebarToko({
               >
                 {city.name}
               </span>
-
             </label>
           ))}
         </div>
       </div>
-
     </aside>
   );
 }
