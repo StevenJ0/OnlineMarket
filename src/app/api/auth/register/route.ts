@@ -13,6 +13,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return NextResponse.json(
+        { error: "Invalid email format." },
+        { status: 400 }
+      );
+    }
+
     // Password mismatch
     if (data.password !== data.confirmPassword) {
       return NextResponse.json(
