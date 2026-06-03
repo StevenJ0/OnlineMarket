@@ -1,35 +1,18 @@
-// src/__tests__/rafi/dupl-seller-11.test.ts
-
-// DUPL-SELLER-11 (Unit / White Box):
-// "Memastikan input stok hanya menerima angka dan minimal 0"
-//
-// Pada form tambah/edit produk (ProductFormView), input stok menggunakan
-// <input type="number" name="stock" min={0} required /> dan pada server nilainya
-// diproses dengan parseInt(stock). Aturan validasinya:
-//   1. Stok wajib diisi (tidak boleh kosong).
-//   2. Hanya menerima angka (bukan huruf/simbol).
-//   3. Berupa bilangan bulat (stok satuan barang).
-//   4. Nilai minimal 0 (tidak boleh negatif).
-//
-// Fungsi validateStock di bawah ini merepresentasikan aturan tersebut sehingga
-// dapat diuji secara unit (white box) dengan analisis nilai batas (boundary value).
+// DUPL-SELLER-11 
 
 type StockValidationResult = { valid: boolean; error: string | null };
 
 function validateStock(value: string): StockValidationResult {
   const raw = (value ?? "").trim();
 
-  // 1. Wajib diisi
   if (raw === "") {
     return { valid: false, error: "Stok produk wajib diisi" };
   }
 
-  // 2 & 3. Hanya angka (bilangan bulat non-negatif): tolak huruf, simbol, desimal, dan tanda minus
   if (!/^\d+$/.test(raw)) {
     return { valid: false, error: "Stok hanya boleh berupa angka" };
   }
 
-  // 4. Minimal 0
   const stock = parseInt(raw, 10);
   if (stock < 0) {
     return { valid: false, error: "Stok minimal 0" };
@@ -39,6 +22,8 @@ function validateStock(value: string): StockValidationResult {
 }
 
 describe("Unit Testing OnlineMarket - Manajemen Produk Penjual (DUPL-SELLER-11)", () => {
+  // Memastikan input stok hanya menerima angka dan minimal 0.
+
   describe("Stok yang valid (angka & minimal 0)", () => {
     it("Menerima stok = 0 (nilai batas bawah)", () => {
       const result = validateStock("0");

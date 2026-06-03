@@ -1,14 +1,11 @@
-// src/__tests__/rafi/dupl-store-15.test.ts
+// DUPL-STORE-15
+
 import { POST } from "@/app/api/store/route";
 
 describe("Unit Testing OnlineMarket - Registrasi Toko / Buka Toko (DUPL-STORE-15)", () => {
-  // DUPL-STORE-15: Memastikan muncul pesan error ketika field wajib dikosongkan.
-  // Pada server (POST /api/store), dokumen wajib (File KTP & Foto PIC) divalidasi
-  // sebelum data disimpan. Jika field wajib tersebut dikosongkan, request harus
-  // ditolak dengan status 400 beserta pesan error.
+  // Memastikan muncul pesan error (status 400) ketika field wajib dikosongkan.
 
   it("Harus menolak dengan status 400 ketika seluruh field (termasuk dokumen wajib) dikosongkan", async () => {
-    // Form benar-benar kosong: tidak ada file KTP maupun Foto PIC
     const formData = new FormData();
 
     const request = new Request("http://localhost:3000/api/store", {
@@ -26,7 +23,6 @@ describe("Unit Testing OnlineMarket - Registrasi Toko / Buka Toko (DUPL-STORE-15
   });
 
   it("Harus tetap menolak dengan status 400 ketika field teks diisi tetapi dokumen wajib (KTP/Foto PIC) dikosongkan", async () => {
-    // Field teks diisi, namun file wajib (ktpFile & picPhoto) sengaja tidak dilampirkan
     const formData = new FormData();
     formData.append("storeName", "Toko Uji");
     formData.append("description", "Deskripsi toko uji");
