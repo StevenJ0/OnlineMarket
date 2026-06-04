@@ -36,6 +36,7 @@
     "@types/nodemailer": "^7.0.4",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "baseline-browser-mapping": "^2.10.33",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.4",
     "jest": "^30.4.2",
